@@ -1,0 +1,12 @@
+*.exe
+*.obj
+*.pdb
+*.suo
+*.ilk
+/autotest
+/autotest.ini
+/repo
+/dl
+/cache
+/logs
+/results
