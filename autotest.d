@@ -63,7 +63,7 @@ void main()
 				{
 					auto sha = pull["head"]["sha"].str;
 
-					log("Testing %s PR # %d (%s), SHA %s".format(repo, n, pull["html_url"].str, sha));
+					log("Testing %s PR # %d ( %s ), SHA %s".format(repo, n, pull["html_url"].str, sha));
 
 					auto resultFile = "results/" ~ sha;
 					if (resultFile.exists)
