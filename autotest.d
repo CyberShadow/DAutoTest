@@ -25,8 +25,11 @@ class DTestManager : DManager
 	override void prepareEnv()
 	{
 		super.prepareEnv();
-		if ("PATH" in .config.env)
-			config.env["PATH"] = config.env["PATH"] ~ pathSeparator ~ .config.env["PATH"];
+		foreach (k, v; .config.env)
+			if (k == "PATH")
+				config.env[k] = config.env[k] ~ pathSeparator ~ v;
+			else
+				config.env[k] = v;
 	}
 }
 
@@ -38,8 +41,6 @@ void main()
 {
 	d = new DTestManager();
 
-	foreach (k, v; config.env)
-		d.config.env[k] = v;
 	foreach (c; d.allComponents)
 		d.config.build.components.enable[c] = c == "website";
 	d.config.build.components.common.makeArgs = ["-j", "8"];
