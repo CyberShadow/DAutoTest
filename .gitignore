@@ -5,8 +5,8 @@
 *.ilk
 /autotest
 /autotest.ini
-/repo
-/dl
-/cache
+
+/work
 /logs
+/cache
 /results

@@ -40,6 +40,7 @@ const repos = ["dlang.org", "dmd", "druntime", "phobos", "tools"];
 void main()
 {
 	d = new DTestManager();
+	d.config.local.workDir = "work".absolutePath();
 
 	foreach (c; d.allComponents)
 		d.config.build.components.enable[c] = c == "website";
