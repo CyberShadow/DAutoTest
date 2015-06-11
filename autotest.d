@@ -104,13 +104,12 @@ void main()
 			{
 				if (buildID && baseResult && baseResult.buildID)
 				{
-					auto diffFile = testDir ~ "/diffstat.ansi";
+					auto diffFile = testDir ~ "/numstat.txt";
 					auto r = spawnProcess([
 							"git",
 							"--git-dir=" ~ d.cacheEngine.cacheDir ~ "/.git",
 							"diff",
-							"--stat",
-							"--color=always",
+							"--numstat",
 							GitCache.refPrefix ~ baseResult.buildID,
 							GitCache.refPrefix ~ buildID,
 						],
