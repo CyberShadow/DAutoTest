@@ -11,6 +11,7 @@ import std.process;
 import std.string;
 
 import ae.net.ssl.openssl;
+import ae.sys.d.cache;
 import ae.sys.net.ae;
 import ae.sys.d.manager;
 import ae.sys.file;
@@ -57,7 +58,7 @@ void main()
 
 		static struct Result
 		{
-			string status, description, testDir;
+			string status, description, testDir, buildID;
 		}
 
 		Result runBuild(string repo, int n, string sha, Result* baseResult = null)
@@ -65,12 +66,13 @@ void main()
 			auto testDir = "results/" ~ baseSHA ~ "/" ~ sha;
 			log("Test directory: " ~ testDir);
 			auto resultFile = testDir ~ "/result.txt";
+			auto buildIDFile = testDir ~ "/buildid.txt";
 			resultFile.ensurePathExists();
 			if (resultFile.exists)
 			{
 				auto lines = resultFile.readText().splitLines();
 				log("Already tested: %s (%s)".format(lines[0], lines[1]));
-				return Result(lines[0], lines[1], testDir);
+				return Result(lines[0], lines[1], testDir, buildIDFile.exists ? buildIDFile.readText() : null);
 			}
 
 			string buildID;
@@ -80,7 +82,7 @@ void main()
 				if (n)
 					write(testDir ~ "/info.txt", "%s\n%d\nhttps://github.com/D-Programming-Language/%s/pull/%d".format(repo, n, repo, n));
 				if (buildID)
-					write(testDir ~ "/buildid.txt", buildID);
+					write(buildIDFile, buildID);
 
 				if (!urlPath)
 					urlPath = testDir;
@@ -91,11 +93,33 @@ void main()
 				}
 				if (status != "pending")
 					write(resultFile, "%s\n%s".format(status, description));
-				return Result(status, description, testDir);
+				return Result(status, description, testDir, buildID);
 			}
 
 			if (baseResult && baseResult.status != "success")
 				return setStatus("error", "Git master is not buildable: " ~ baseError, baseTestDir);
+
+			scope(success)
+			{
+				if (buildID && baseResult && baseResult.buildID)
+				{
+					auto diffFile = testDir ~ "/diffstat.ansi";
+					auto r = spawnProcess([
+							"git",
+							"--git-dir=" ~ d.cacheEngine.cacheDir ~ "/.git",
+							"diff",
+							"--stat",
+							"--color=always",
+							GitCache.refPrefix ~ baseResult.buildID,
+							GitCache.refPrefix ~ buildID,
+						],
+						std.stdio.stdin,
+						File(diffFile, "wb"),
+					).wait();
+					if (r != 0)
+						diffFile.remove();
+				}
+			}
 
 			string failStatus = "error";
 
@@ -171,9 +195,9 @@ void main()
 
 		foreach (repo; repos)
 		{
-			auto result = githubQuery("https://api.github.com/repos/D-Programming-Language/" ~ repo ~ "/pulls?per_page=100").parseJSON();
+			auto pulls = githubQuery("https://api.github.com/repos/D-Programming-Language/" ~ repo ~ "/pulls?per_page=100").parseJSON().array;
 
-			foreach (pull; result.array)
+			foreach (pull; pulls)
 			{
 				Thread.sleep(10.seconds);
 
