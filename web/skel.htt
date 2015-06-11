@@ -1,0 +1,11 @@
+<!doctype html>
+
+<link rel="stylesheet" href="/static/style.css" />
+
+<title><?title?> - DAutoTest</title>
+
+<body>
+<h1><?title?></h1>
+
+<?content?>
+</body>
