@@ -219,7 +219,7 @@ void showResult(string testDir)
 			else
 			{
 				html.put(`<div class="additions" style="width:%5.3f%%" title="%s addition%s"></div>`.format(line[0].to!int * changeWidth, line[0], line[0]=="1" ? "" : "s"));
-				html.put(`<div class="deletions" style="width:%5.3f%%" title="%s deletion%s"></div>`.format(line[0].to!int * changeWidth, line[0], line[0]=="1" ? "" : "s"));
+				html.put(`<div class="deletions" style="width:%5.3f%%" title="%s deletion%s"></div>`.format(line[1].to!int * changeWidth, line[1], line[1]=="1" ? "" : "s"));
 			}
 			html.put(
 				`</td>`
