@@ -77,19 +77,28 @@ void main()
 				}
 			}
 
+			string buildID;
+
 			void setStatus(string status, string description)
 			{
+				if (buildID)
+					write(testDir ~ "/buildid.txt", buildID);
 				write(resultFile, "%s\n%s".format(status, description));
 			}
 
 			try
 			{
+				auto state = d.begin("origin/master");
+
+				buildID = d.getComponent("website").getBuildID();
+				log("Website build ID: " ~ buildID);
+
 				auto logFile = testDir ~ "/build.log";
 				log("Running build (sending output to %s)".format(logFile));
 				{
 					auto redirected = RedirectOutput(logFile);
 					try
-						d.buildRev(baseSHA, d.config.build);
+						d.build(state, d.config.build);
 					catch (Exception e)
 					{
 						redirected.f.writeln("Build failed: ", e.toString());
@@ -97,7 +106,6 @@ void main()
 					}
 				}
 
-				d.buildRev("origin/master", d.config.build);
 				setStatus("success", "Base OK");
 			}
 			catch (Exception e)
@@ -120,8 +128,9 @@ void main()
 
 				int n = pull["number"].integer.to!int;
 				auto sha = pull["head"]["sha"].str;
+				auto url = pull["html_url"].str;
 
-				log("Testing %s PR # %d ( %s ), SHA %s".format(repo, n, pull["html_url"].str, sha));
+				log("Testing %s PR # %d ( %s ), SHA %s".format(repo, n, url, sha));
 
 				auto testDir = "results/" ~ baseSHA ~ "/" ~ sha;
 				log("Test directory: " ~ testDir);
@@ -133,8 +142,15 @@ void main()
 					continue;
 				}
 
+				string buildID;
+
 				void setStatus(string status, string description, string resultDir = null)
 				{
+					if (url)
+						write(testDir ~ "/url.txt", url);
+					if (buildID)
+						write(testDir ~ "/buildid.txt", buildID);
+
 					if (!resultDir)
 						resultDir = testDir;
 					auto reply = setTestStatus(repo, sha, n, status, description, "http://dtest.thecybershadow.net/" ~ resultDir ~ "/");
@@ -168,6 +184,8 @@ void main()
 					}
 
 					log("Merge OK, resulting SHA: " ~ state.submoduleCommits[repo]);
+					buildID = d.getComponent("website").getBuildID();
+					log("Website build ID: " ~ buildID);
 
 					failStatus = "failure";
 
