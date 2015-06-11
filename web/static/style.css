@@ -4,23 +4,51 @@ body {
 	margin: 2em auto;
 }
 
-table td {
+body > table > tbody > tr > td {
 	padding: 0.5em 1em 0 0;
 	vertical-align: top;
 }
 
-table td:first-child {
+body > table > tbody > tr > td:first-child {
 	font-weight: bold;
+	width: 1px;
+	white-space: pre;
 }
 
 pre {
 	margin: 0;
 }
 
-.ansi-1 {
-	color: red;
+table {
+	width: 100%;
 }
 
-.ansi-2 {
-	color: green;
+table.changes > tbody > tr > td {
+}
+
+table.changes > tbody > tr > td:first-child {
+	font-family: monospace;
+	font-size: 1.1em;
+	width: 1px;
+	white-space: pre;
+	padding-right: 1em;
+}
+
+.additions {
+	background-color: green;
+}
+.deletions {
+	background-color: #B00;
+}
+.additions, .deletions {
+	display: inline-block;
+	height: 1em;
+	vertical-align: middle;
+}
+
+.dirlist {
+	font-family: monospace;
+	font-size: 1.1em;
+	list-style: none;
+	white-space: pre;
 }
