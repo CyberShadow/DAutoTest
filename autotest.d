@@ -200,8 +200,6 @@ void main()
 
 			foreach (pull; pulls)
 			{
-				Thread.sleep(10.seconds);
-
 				int n = pull["number"].integer.to!int;
 				auto sha = pull["head"]["sha"].str;
 				auto url = pull["html_url"].str;
