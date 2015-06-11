@@ -5,6 +5,7 @@ struct Config
 {
 	string token;
 	string[string] env;
+	string basePulls;
 }
 
 immutable Config config;

@@ -1,5 +1,6 @@
 import core.thread;
 
+import std.algorithm;
 import std.conv;
 import std.exception;
 import std.file;
@@ -104,6 +105,15 @@ void main()
 
 				auto state = d.begin(baseSHA);
 				log("Repository state: " ~ text(state));
+
+				foreach (basePull; config.basePulls.split(",").map!(to!int))
+				{
+					log("Fetching additional base pull #%d...".format(basePull));
+					auto pullSHA = d.getPull("dlang.org", basePull);
+
+					log("Merging...");
+					d.merge(state, "dlang.org", pullSHA);
+				}
 
 				if (repo)
 				{
