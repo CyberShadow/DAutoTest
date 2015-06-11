@@ -221,7 +221,7 @@ string setTestStatus(string repo, string sha, int pull, string status, string de
 		return "OK";
 	else
 		return githubPost(
-			"https://api.github.com/D-Programming-Language/%s/statuses/%s".format(repo, sha),
+			"https://api.github.com/repos/D-Programming-Language/%s/statuses/%s".format(repo, sha),
 			[
 				"state" : status,
 				"target_url" : url,
