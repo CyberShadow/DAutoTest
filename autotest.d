@@ -200,16 +200,18 @@ string setTestStatus(string repo, string sha, int pull, string status, string de
 {
 	log("Setting status for %s commit %s to %s (%s): %s".format(repo, pull, status, description, url));
 
-	return "OK";
-	/*return githubPost(
-		"https://api.github.com/D-Programming-Language/%s/statuses/%s".format(repo, sha),
-		[
-			"state" : status,
-			"target_url" : url,
-			"description" : description,
-			"context" : "CyberShadow/DAutoTest",
-		]
-	);*/
+	debug
+		return "OK";
+	else
+		return githubPost(
+			"https://api.github.com/D-Programming-Language/%s/statuses/%s".format(repo, sha),
+			[
+				"state" : status,
+				"target_url" : url,
+				"description" : description,
+				"context" : "CyberShadow/DAutoTest",
+			]
+		);
 }
 
 struct RedirectOutput
