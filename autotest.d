@@ -215,6 +215,13 @@ void main()
 				runBuild(repo, n, sha, &baseResult);
 			}
 		}
+
+		spawnProcess([
+			"git",
+			"--git-dir=" ~ d.needCacheEngine().cacheDir ~ "/.git",
+			"repack",
+			"-d",
+		]).wait();
 	}
 }
 
