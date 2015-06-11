@@ -24,13 +24,12 @@ table {
 }
 
 table.changes > tbody > tr > td {
+	white-space: pre;
 }
 
 table.changes > tbody > tr > td:first-child {
 	font-family: monospace;
-	font-size: 1.1em;
 	width: 1px;
-	white-space: pre;
 	padding-right: 1em;
 }
 
