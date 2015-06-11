@@ -66,17 +66,45 @@ void main()
 		{
 			auto testDir = "results/" ~ baseSHA ~ "/" ~ sha;
 			log("Test directory: " ~ testDir);
+
 			auto resultFile = testDir ~ "/result.txt";
-			auto buildIDFile = testDir ~ "/buildid.txt";
 			resultFile.ensurePathExists();
+
+			string buildID;
+			auto buildIDFile = testDir ~ "/buildid.txt";
+			if (buildIDFile.exists)
+				buildID = buildIDFile.readText();
+
+			scope(success)
+			{
+				if (buildID && baseResult && baseResult.buildID)
+				{
+					auto diffFile = testDir ~ "/numstat.txt";
+					if (!diffFile.exists)
+					{
+						auto r = spawnProcess([
+								"git",
+								"--git-dir=" ~ d.needCacheEngine().cacheDir ~ "/.git",
+								"diff",
+								"--numstat",
+								GitCache.refPrefix ~ baseResult.buildID,
+								GitCache.refPrefix ~ buildID,
+							],
+							std.stdio.stdin,
+							File(diffFile, "wb"),
+						).wait();
+						if (r != 0)
+							diffFile.remove();
+					}
+				}
+			}
+
 			if (resultFile.exists)
 			{
 				auto lines = resultFile.readText().splitLines();
 				log("Already tested: %s (%s)".format(lines[0], lines[1]));
-				return Result(lines[0], lines[1], testDir, buildIDFile.exists ? buildIDFile.readText() : null);
+				return Result(lines[0], lines[1], testDir, buildID);
 			}
-
-			string buildID;
 
 			Result setStatus(string status, string description, string urlPath = null)
 			{
@@ -99,27 +127,6 @@ void main()
 
 			if (baseResult && baseResult.status != "success")
 				return setStatus("error", "Git master is not buildable: " ~ baseError, baseTestDir);
-
-			scope(success)
-			{
-				if (buildID && baseResult && baseResult.buildID)
-				{
-					auto diffFile = testDir ~ "/numstat.txt";
-					auto r = spawnProcess([
-							"git",
-							"--git-dir=" ~ d.cacheEngine.cacheDir ~ "/.git",
-							"diff",
-							"--numstat",
-							GitCache.refPrefix ~ baseResult.buildID,
-							GitCache.refPrefix ~ buildID,
-						],
-						std.stdio.stdin,
-						File(diffFile, "wb"),
-					).wait();
-					if (r != 0)
-						diffFile.remove();
-				}
-			}
 
 			string failStatus = "error";
 
