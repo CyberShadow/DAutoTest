@@ -93,14 +93,14 @@ string githubQuery(string url)
 	return result;
 }
 
-string githubPost(string url, string[string] data)
+string githubPost(string url, string jsonData)
 {
 	auto request = new HttpRequest;
 	request.resource = url;
 	request.method = "POST";
 	request.headers["Authorization"] = "token " ~ config.token;
-	request.headers["Content-Type"] = "application/x-www-form-urlencoded";
-	request.data = [Data(encodeUrlParameters(data))];
+	request.headers["Content-Type"] = "application/json";
+	request.data = [Data(jsonData)];
 
 	string result;
 

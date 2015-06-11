@@ -227,7 +227,7 @@ string setTestStatus(string repo, string sha, int pull, string status, string de
 				"target_url" : url,
 				"description" : description,
 				"context" : "CyberShadow/DAutoTest",
-			]
+			].toJson()
 		);
 }
 
