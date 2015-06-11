@@ -54,51 +54,91 @@ void main()
 		auto baseSHA = d.getMetaRepo().getRef("origin/master");
 		string baseError, baseTestDir;
 
-		void buildBase()
+		static struct Result
 		{
-			log("Testing base SHA " ~ baseSHA);
+			string status, description, testDir;
+		}
 
-			auto testDir = baseTestDir = "results/" ~ baseSHA ~ "/!base";
+		Result runBuild(string repo, int n, string sha, Result* baseResult = null)
+		{
+			auto testDir = "results/" ~ baseSHA ~ "/" ~ sha;
 			log("Test directory: " ~ testDir);
 			auto resultFile = testDir ~ "/result.txt";
 			resultFile.ensurePathExists();
 			if (resultFile.exists)
 			{
-				auto result = resultFile.readText().splitLines();
-				if (result[0] == "success")
-				{
-					log("Known good base, skipping base test");
-					return;
-				}
-				else
-				{
-					log("Known bad base");
-					baseError = result[1];
-				}
+				auto lines = resultFile.readText().splitLines();
+				log("Already tested: %s (%s)".format(lines[0], lines[1]));
+				return Result(lines[0], lines[1], testDir);
 			}
 
 			string buildID;
 
-			void setStatus(string status, string description)
+			Result setStatus(string status, string description, string urlPath = null)
 			{
+				if (n)
+					write(testDir ~ "/info.txt", "%s\n%d\nhttps://github.com/D-Programming-Language/%s/pull/%d".format(repo, n, repo, n));
 				if (buildID)
 					write(testDir ~ "/buildid.txt", buildID);
-				write(resultFile, "%s\n%s".format(status, description));
+
+				if (!urlPath)
+					urlPath = testDir;
+				if (repo)
+				{
+					auto reply = setTestStatus(repo, sha, n, status, description, "http://dtest.thecybershadow.net/" ~ urlPath ~ "/");
+					write(testDir ~ "/ghstatus.json", reply);
+				}
+				if (status != "pending")
+					write(resultFile, "%s\n%s".format(status, description));
+				return Result(status, description, testDir);
 			}
+
+			if (baseResult && baseResult.status != "success")
+				return setStatus("error", "Git master is not buildable: " ~ baseError, baseTestDir);
+
+			string failStatus = "error";
 
 			try
 			{
-				auto state = d.begin("origin/master");
+				setStatus("pending", "Building documentation");
 
-				buildID = d.getComponent("website").getBuildID();
-				log("Website build ID: " ~ buildID);
+				auto state = d.begin(baseSHA);
+				log("Repository state: " ~ text(state));
+
+				if (repo)
+				{
+					log("Fetching pull...");
+					auto pullSHA = d.getPull(repo, n);
+					enforce(sha == pullSHA, "Pull request SHA mismatch");
+
+					log("Merging...");
+					try
+						d.merge(state, repo, pullSHA);
+					catch (Exception e)
+					{
+						log("Merge error: " ~ e.msg);
+						throw new Exception("Merge error");
+					}
+
+					log("Merge OK, resulting SHA: " ~ state.submoduleCommits[repo]);
+				}
+
+				failStatus = "failure";
 
 				auto logFile = testDir ~ "/build.log";
 				log("Running build (sending output to %s)".format(logFile));
 				{
 					auto redirected = RedirectOutput(logFile);
 					try
+					{
+						scope(exit)
+						{
+							buildID = d.getComponent("website").getBuildID();
+							log("Website build ID: " ~ buildID);
+						}
+
 						d.build(state, d.config.build);
+					}
 					catch (Exception e)
 					{
 						redirected.f.writeln("Build failed: ", e.toString());
@@ -106,17 +146,18 @@ void main()
 					}
 				}
 
-				setStatus("success", "Base OK");
+				return setStatus("success", "Documentation build OK");
 			}
 			catch (Exception e)
 			{
-				log("Error: " ~ e.toString());
-				setStatus("failure", e.msg);
-				baseError = e.msg;
+				log("Error: " ~ e.msg);
+				return setStatus(failStatus, e.msg);
 			}
 		}
-		buildBase();
-		log(baseError ? "Base is unbuildable!" : "Base OK.");
+
+		log("Testing base SHA " ~ baseSHA);
+		auto baseResult = runBuild(null, 0, "!base");
+		log(baseResult.status == "success" ? "Base OK." : "Base is unbuildable!");
 
 		foreach (repo; repos)
 		{
@@ -132,83 +173,7 @@ void main()
 
 				log("Testing %s PR # %d ( %s ), SHA %s".format(repo, n, url, sha));
 
-				auto testDir = "results/" ~ baseSHA ~ "/" ~ sha;
-				log("Test directory: " ~ testDir);
-				auto resultFile = testDir ~ "/result.txt";
-				resultFile.ensurePathExists();
-				if (resultFile.exists)
-				{
-					log("Already tested, skipping");
-					continue;
-				}
-
-				string buildID;
-
-				void setStatus(string status, string description, string resultDir = null)
-				{
-					if (url)
-						write(testDir ~ "/url.txt", url);
-					if (buildID)
-						write(testDir ~ "/buildid.txt", buildID);
-
-					if (!resultDir)
-						resultDir = testDir;
-					auto reply = setTestStatus(repo, sha, n, status, description, "http://dtest.thecybershadow.net/" ~ resultDir ~ "/");
-					write(testDir ~ "/ghstatus.json", reply);
-					if (status != "pending")
-						write(resultFile, "%s\n%s".format(status, description));
-				}
-
-				if (baseError)
-				{
-					setStatus("error", "Git master is not buildable: " ~ baseError, baseTestDir);
-					continue;
-				}
-
-				string failStatus = "error";
-
-				try
-				{
-					setStatus("pending", "Building documentation");
-
-					auto state = d.begin(baseSHA);
-					log("initial state = " ~ text(state));
-					auto pullSHA = d.getPull(repo, n);
-					enforce(sha == pullSHA, "Pull request SHA mismatch");
-					try
-						d.merge(state, repo, pullSHA);
-					catch (Exception e)
-					{
-						log("Merge error: " ~ e.msg);
-						throw new Exception("Merge error");
-					}
-
-					log("Merge OK, resulting SHA: " ~ state.submoduleCommits[repo]);
-					buildID = d.getComponent("website").getBuildID();
-					log("Website build ID: " ~ buildID);
-
-					failStatus = "failure";
-
-					auto logFile = testDir ~ "/build.log";
-					log("Running build (sending output to %s)".format(logFile));
-					{
-						auto redirected = RedirectOutput(logFile);
-						try
-							d.build(state, d.config.build);
-						catch (Exception e)
-						{
-							redirected.f.writeln("Build failed: ", e.toString());
-							throw new Exception("Build failed");
-						}
-					}
-
-					setStatus("success", "Documentation build OK");
-				}
-				catch (Exception e)
-				{
-					log("Error: " ~ e.msg);
-					setStatus(failStatus, e.msg);
-				}
+				runBuild(repo, n, sha, &baseResult);
 			}
 		}
 	}
