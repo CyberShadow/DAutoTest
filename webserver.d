@@ -224,8 +224,8 @@ void showResult(string testDir)
 			html.put(
 				`</td>`
 				`<td>`
-					`<a href="file/`, encodeEntities(fn), `">Old</a> `
-					`<a href="../!base/file/`, encodeEntities(fn), `">New</a> `
+					`<a href="../!base/file/`, encodeEntities(fn), `">Old</a> `
+					`<a href="file/`, encodeEntities(fn), `">New</a> `
 					`<a href="diff/`, encodeEntities(fn), `">Diff</a>`
 				`</td>`
 				`</tr>`
