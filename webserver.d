@@ -183,7 +183,7 @@ void showResult(string testDir)
 		`<tr><td>Details</td><td>`, result[1], `</td></tr>`
 	//	`<tr><td>Build log</td><td><pre>`, tryReadText(testDir ~ "build.log").encodeEntities(), `</pre></td></tr>`
 		`<tr><td>Build log</td><td><a href="build.log">View</a></td></tr>`
-		`<tr><td>Files</td><td><a href="file/web/index.html">Index</a> &middot; <a href="file/">List</a></td></tr>`
+		`<tr><td>Files</td><td><a href="file/web/index.html">Main page</a> &middot; <a href="file/web/">All files</a></td></tr>`
 	);
 	if (result[0] == "success" && exists(testDir ~ "numstat.txt"))
 	{
@@ -211,6 +211,8 @@ void showResult(string testDir)
 		foreach (line; lines)
 		{
 			auto fn = line[2];
+			if (fn.startsWith("digger-"))
+				continue;
 			html.put(`<tr><td>`, encodeEntities(fn), `</td><td>`);
 			if (line[0] == "-")
 				html.put(`(binary file)`);
