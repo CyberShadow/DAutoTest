@@ -114,6 +114,8 @@ HttpResponse handleRequest(HttpRequest request, HttpServerConnection conn)
 					enforce(index >= 0, "Name not in tree: " ~ dirName);
 					obj = objectReader.read(tree[index].hash);
 				}
+				if (obj.type == "tree")
+					return response.redirect(path[$-1] ~ "/");
 				enforce(obj.type == "blob", "Invalid object type");
 				return response.serveData(Data(obj.data), guessMime(path[$-1]));
 			}
