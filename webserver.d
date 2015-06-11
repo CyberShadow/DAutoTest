@@ -65,12 +65,12 @@ HttpResponse handleRequest(HttpRequest request, HttpServerConnection conn)
 				break;
 			case "results":
 				title = "Test result";
-				enforce(path.length > 3, "Bad path");
-				enforce(path[1].match(re!`^[0-9a-f]{40}$`), "Bad base commit");
-				enforce(path[2].match(re!`^[0-9a-f]{40}$`) || path[2] == "!base", "Bad pull commit");
+				enforce!NotFoundException(path.length > 3, "Bad path");
+				enforce!NotFoundException(path[1].match(re!`^[0-9a-f]{40}$`), "Bad base commit");
+				enforce!NotFoundException(path[2].match(re!`^[0-9a-f]{40}$`) || path[2] == "!base", "Bad pull commit");
 
 				auto testDir = "results/%s/%s/".format(path[1], path[2]);
-				enforce(testDir.exists, "No such commit");
+				enforce!NotFoundException(testDir.exists, "No such commit");
 
 				auto action = path[3];
 				switch (action)
@@ -92,12 +92,12 @@ HttpResponse handleRequest(HttpRequest request, HttpServerConnection conn)
 						return response.redirect("/diff/" ~ baseBuildID ~ "/" ~ buildID ~ "/" ~ path[4..$].join("/"));
 					}
 					default:
-						throw new Exception("Unknown action");
+						throw new NotFoundException("Unknown action");
 				}
 				break;
 			case "artifact":
 			{
-				enforce(path.length >= 2, "Bad path");
+				enforce!NotFoundException(path.length >= 2, "Bad path");
 				auto refName = GitCache.refPrefix ~ path[1];
 				auto commitObject = objectReader.read(refName);
 				auto obj = objectReader.read(commitObject.parseCommit().tree);
@@ -111,7 +111,7 @@ HttpResponse handleRequest(HttpRequest request, HttpServerConnection conn)
 						break pathSwitch;
 					}
 					auto index = tree.countUntil!(entry => entry.name == dirName);
-					enforce(index >= 0, "Name not in tree: " ~ dirName);
+					enforce!NotFoundException(index >= 0, "Name not in tree: " ~ dirName);
 					obj = objectReader.read(tree[index].hash);
 				}
 				if (obj.type == "tree")
@@ -121,7 +121,7 @@ HttpResponse handleRequest(HttpRequest request, HttpServerConnection conn)
 			}
 			case "diff":
 			{
-				enforce(path.length >= 4, "Bad path");
+				enforce!NotFoundException(path.length >= 4, "Bad path");
 				auto refA = GitCache.refPrefix ~ path[1];
 				auto refB = GitCache.refPrefix ~ path[2];
 				return response.serveText(cache.query(["diff", refA, refB, "--", path[3..$].join("/")]));
@@ -131,11 +131,14 @@ HttpResponse handleRequest(HttpRequest request, HttpServerConnection conn)
 			case "robots.txt":
 				return response.serveText("User-agent: *\nDisallow: /");
 			default:
-				throw new Exception("Unknown resource");
+				throw new NotFoundException("Unknown resource");
 		}
 	}
 	catch (CaughtException e)
-		return response.writeError(HttpStatusCode.InternalServerError, e.toString());
+	{
+		status = cast(NotFoundException)e ? HttpStatusCode.NotFound : HttpStatusCode.InternalServerError;
+		return response.writeError(status, e.toString());
+	}
 
 	auto vars = [
 		"title" : title,
@@ -146,6 +149,8 @@ HttpResponse handleRequest(HttpRequest request, HttpServerConnection conn)
 	response.setStatus(status);
 	return response;
 }
+
+mixin DeclareException!q{NotFoundException};
 
 void showIndex()
 {
