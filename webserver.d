@@ -107,7 +107,7 @@ HttpResponse handleRequest(HttpRequest request, HttpServerConnection conn)
 					if (dirName == "")
 					{
 						title = "Artifact storage directory listing";
-						showDirListing(tree);
+						showDirListing(tree, path.length > 3);
 						break pathSwitch;
 					}
 					auto index = tree.countUntil!(entry => entry.name == dirName);
@@ -150,12 +150,15 @@ void showIndex()
 	html.put("This is the DAutoTest web service.");
 }
 
-void showDirListing(GitObject.TreeEntry[] entries)
+void showDirListing(GitObject.TreeEntry[] entries, bool showUpLink)
 {
 	html.put(
 		`<ul class="dirlist">`
-		`<li>       <a href="../">..</a></li>`
 	);
+	if (showUpLink)
+		html.put(
+			`<li>       <a href="../">..</a></li>`
+		);
 	foreach (entry; entries)
 	{
 		auto name = encodeEntities(entry.name) ~ (entry.mode & octal!40000 ? `/` : ``);
