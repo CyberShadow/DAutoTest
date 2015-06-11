@@ -236,7 +236,7 @@ void main()
 
 string setTestStatus(string repo, string sha, int pull, string status, string description, string url)
 {
-	log("Setting status for %s commit %s to %s (%s): %s".format(repo, pull, status, description, url));
+	log("Setting status for %s pull %s (commit %s) to %s (%s): %s".format(repo, pull, sha, status, description, url));
 
 	debug
 		return "OK";
