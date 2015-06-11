@@ -76,12 +76,12 @@ void githubQuery(string url, void delegate(string) handleData, void delegate(str
 
 string githubQuery(string url)
 {
-	string data;
+	string result;
 
 	githubQuery(url,
 		(string dataReceived)
 		{
-			data = dataReceived;
+			result = dataReceived;
 		},
 		(string error)
 		{
@@ -90,5 +90,31 @@ string githubQuery(string url)
 	);
 
 	socketManager.loop();
-	return data;
+	return result;
+}
+
+string githubPost(string url, string[string] data)
+{
+	auto request = new HttpRequest;
+	request.resource = url;
+	request.method = "POST";
+	request.headers["Authorization"] = "token " ~ config.token;
+	request.headers["Content-Type"] = "application/x-www-form-urlencoded";
+	request.data = [Data(encodeUrlParameters(data))];
+
+	string result;
+
+	httpRequest(request,
+		(Data data)
+		{
+			result = (cast(char[])data.contents).idup;
+			std.utf.validate(result);
+		},
+		(string error)
+		{
+			throw new Exception(error);
+		});
+
+	socketManager.loop();
+	return result;
 }
