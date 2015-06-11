@@ -188,8 +188,6 @@ void showResult(string testDir)
 	if (result[0] == "success" && exists(testDir ~ "numstat.txt"))
 	{
 		auto lines = readText(testDir ~ "numstat.txt").strip.splitLines.map!(line => line.split('\t')).array;
-		if (!lines.length)
-			html.put(`(no changes)`);
 		int additions, deletions, maxChanges;
 		foreach (line; lines)
 		{
@@ -207,6 +205,8 @@ void showResult(string testDir)
 			`<tr><td>Changes</td><td>`
 			`<table class="changes">`
 		);
+		if (!lines.length)
+			html.put(`(no changes)`);
 		auto changeWidth = min(100.0 / maxChanges, 5.0);
 		foreach (line; lines)
 		{
