@@ -11,7 +11,9 @@ import std.process;
 import std.string;
 
 import ae.net.ssl.openssl;
+import ae.sys.cmd : NULL_FILE;
 import ae.sys.d.cache;
+import ae.sys.log;
 import ae.sys.net.ae;
 import ae.sys.d.manager;
 import ae.sys.file;
@@ -41,6 +43,13 @@ const repos = ["dlang.org", "dmd", "druntime", "phobos", "tools"];
 
 void main()
 {
+	if (quiet)
+	{
+		auto f = File(NULL_FILE, "wb");
+		std.stdio.stdout = f;
+		std.stdio.stderr = f;
+	}
+
 	d = new DTestManager();
 	d.config.local.workDir = "work".absolutePath();
 	d.config.cache = "git";
