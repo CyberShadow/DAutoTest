@@ -68,6 +68,7 @@ void main()
 
 		static struct Result
 		{
+			bool cached;
 			string status, description, testDir, buildID;
 		}
 
@@ -108,11 +109,21 @@ void main()
 				}
 			}
 
+			auto latestFile = "results/!latest/" ~ sha ~ ".txt";
+			scope(success)
+			{
+				if (!latestFile.exists)
+				{
+					ensurePathExists(latestFile);
+					write(latestFile, baseSHA);
+				}
+			}
+
 			if (resultFile.exists)
 			{
 				auto lines = resultFile.readText().splitLines();
 				log("Already tested: %s (%s)".format(lines[0], lines[1]));
-				return Result(lines[0], lines[1], testDir, buildID);
+				return Result(true, lines[0], lines[1], testDir, buildID);
 			}
 
 			Result setStatus(string status, string description, string urlPath = null)
@@ -131,7 +142,7 @@ void main()
 				}
 				if (status != "pending")
 					write(resultFile, "%s\n%s".format(status, description));
-				return Result(status, description, testDir, buildID);
+				return Result(false, status, description, testDir, buildID);
 			}
 
 			if (baseResult && baseResult.status != "success")
@@ -207,30 +218,83 @@ void main()
 
 		log("Testing base SHA " ~ baseSHA);
 		auto baseResult = runBuild(null, 0, "!base");
+
 		log(baseResult.status == "success" ? "Base OK." : "Base is unbuildable!");
 
+		log("Fetching pulls...");
+
+		JSONValue[] pulls;
 		foreach (repo; repos)
+			pulls ~= githubQuery("https://api.github.com/repos/D-Programming-Language/" ~ repo ~ "/pulls?per_page=100").parseJSON().array;
+
+		log("Sorting pulls...");
+
+		string lastTest(string sha) { auto fn = "results/!latest/" ~ sha ~ ".txt"; return fn.exists ? fn.readText : null; }
+		bool shaTested(string sha) { return lastTest(sha) !is null; }
+
+		pulls.multiSort!(
+			(a, b) => shaTested(a["head"]["sha"].str) < shaTested(b["head"]["sha"].str),
+			(a, b) => a["updated_at"].str > b["updated_at"].str,
+		);
+
+		bool foundWork;
+
+		foreach (pull; pulls)
 		{
-			auto pulls = githubQuery("https://api.github.com/repos/D-Programming-Language/" ~ repo ~ "/pulls?per_page=100").parseJSON().array;
+			auto repo = pull["base"]["repo"]["name"].str;
+			int n = pull["number"].integer.to!int;
+			auto sha = pull["head"]["sha"].str;
+			auto url = pull["html_url"].str;
 
-			foreach (pull; pulls)
+			log("Testing %s PR # %d ( %s ), updated %s, SHA %s".format(repo, n, url, pull["updated_at"].str, sha));
+			auto last = lastTest(sha);
+			if (last)
+				log("  (already tested with base SHA %s)".format(last));
+			else
+				log("  (never tested before)");
+
+			auto result = runBuild(repo, n, sha, &baseResult);
+			if (!result.cached)
 			{
-				int n = pull["number"].integer.to!int;
-				auto sha = pull["head"]["sha"].str;
-				auto url = pull["html_url"].str;
-
-				log("Testing %s PR # %d ( %s ), SHA %s".format(repo, n, url, sha));
-
-				runBuild(repo, n, sha, &baseResult);
+				foundWork = true;
+				break;
 			}
 		}
 
-		spawnProcess([
-			"git",
-			"--git-dir=" ~ d.needCacheEngine().cacheDir ~ "/.git",
-			"repack",
-			"-d",
-		]).wait();
+		static int repackCounter;
+		if (!foundWork)
+		{
+			log("Nothing to do...");
+			if (repackCounter)
+			{
+				log("Full repack...");
+				spawnProcess([
+					"git",
+					"--git-dir=" ~ d.needCacheEngine().cacheDir ~ "/.git",
+					"repack",
+					"-ad",
+				]).wait();
+				repackCounter = 0;
+			}
+			else
+			{
+				log("Sleeping...");
+				Thread.sleep(1.minutes);
+			}
+		}
+		else
+		{
+			if (repackCounter++ % 10 == 0)
+			{
+				log("Repacking...");
+				spawnProcess([
+					"git",
+					"--git-dir=" ~ d.needCacheEngine().cacheDir ~ "/.git",
+					"repack",
+					"-d",
+				]).wait();
+			}
+		}
 	}
 }
 
