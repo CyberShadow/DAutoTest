@@ -1,3 +1,5 @@
+import std.algorithm;
+
 import ae.sys.log;
 import ae.utils.sini;
 
@@ -23,4 +25,11 @@ Logger log;
 static this()
 {
 	log = createLogger("DAutoTest");
+}
+
+// ***************************************************************************
+
+bool fileIgnored(string fn)
+{
+	return fn.startsWith("digger-");
 }

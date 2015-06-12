@@ -205,7 +205,7 @@ void main()
 						{
 							additions = deletions = 0;
 							foreach (line; diffFile.readText().splitLines().map!(line => line.split("\t")))
-								if (line[0] != "-")
+								if (line[0] != "-" && !fileIgnored(line[2]))
 								{
 									additions += line[0].to!int;
 									deletions += line[1].to!int;

@@ -226,7 +226,7 @@ void showResult(string testDir)
 		foreach (line; lines)
 		{
 			auto fn = line[2];
-			if (fn.startsWith("digger-"))
+			if (fileIgnored(fn))
 				continue;
 			html.put(`<tr><td>`, encodeEntities(fn), `</td><td>`);
 			if (line[0] == "-")
