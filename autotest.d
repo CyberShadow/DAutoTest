@@ -45,7 +45,7 @@ void main()
 {
 	if (quiet)
 	{
-		auto f = File(NULL_FILE, "wb");
+		auto f = File("autotest.log", "wb");
 		std.stdio.stdout = f;
 		std.stdio.stderr = f;
 	}
