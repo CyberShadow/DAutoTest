@@ -178,7 +178,7 @@ void main()
 					catch (Exception e)
 					{
 						log("Merge error: " ~ e.msg);
-						throw new Exception("Merge error");
+						throw new Exception("Merge failed");
 					}
 
 					log("Merge OK, resulting SHA: " ~ state.submoduleCommits[repo]);
