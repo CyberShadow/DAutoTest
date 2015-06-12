@@ -12,9 +12,7 @@ import ae.sys.file;
 import ae.utils.digest;
 import ae.utils.json;
 
-import common : config;
-
-debug import std.stdio : stderr;
+import common : config, log;
 
 struct CacheEntry
 {
@@ -40,6 +38,7 @@ void githubQuery(string url, void delegate(string) handleData, void delegate(str
 			request.headers["If-Modified-Since"] = cacheEntry.lastModified;
 	}
 
+	log("Getting URL " ~ url);
 	httpRequest(request,
 		(HttpResponse response, string disconnectReason)
 		{
@@ -50,16 +49,15 @@ void githubQuery(string url, void delegate(string) handleData, void delegate(str
 				string s;
 				if (response.status == HttpStatusCode.NotModified)
 				{
-					debug std.stdio.stderr.writeln("Cache hit");
+					log(" > Cache hit");
 					s = cacheEntry.data;
 					handleData(s);
 				}
 				else
 				if (response.status == HttpStatusCode.OK)
 				{
-					debug std.stdio.stderr.writeln("Cache miss");
-					scope(failure) std.stdio.writeln(url);
-					scope(failure) std.stdio.writeln(response.headers);
+					log(" > Cache hit");
+					scope(failure) log(response.headers.text);
 					s = (cast(char[])response.getContent().contents).idup;
 					cacheEntry.etag = response.headers.get("ETag", null);
 					cacheEntry.lastModified = response.headers.get("Last-Modified", null);
