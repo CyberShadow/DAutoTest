@@ -261,19 +261,25 @@ void main()
 			}
 		}
 
+		void repackCache(bool full)
+		{
+			log("Running %s repack...".format(full ? "full" : "partial"));
+			auto status = spawnProcess([
+				"git",
+				"--git-dir=" ~ d.needCacheEngine().cacheDir ~ "/.git",
+				"repack",
+				full ? "-ad" : "-d",
+			]).wait();
+			enforce(status == 0, "git-repack exited with status %d".format(status));
+		}
+
 		static int repackCounter;
 		if (!foundWork)
 		{
 			log("Nothing to do...");
 			if (repackCounter)
 			{
-				log("Full repack...");
-				spawnProcess([
-					"git",
-					"--git-dir=" ~ d.needCacheEngine().cacheDir ~ "/.git",
-					"repack",
-					"-ad",
-				]).wait();
+				repackCache(true);
 				repackCounter = 0;
 			}
 			else
@@ -285,15 +291,7 @@ void main()
 		else
 		{
 			if (repackCounter++ % 10 == 0)
-			{
-				log("Repacking...");
-				spawnProcess([
-					"git",
-					"--git-dir=" ~ d.needCacheEngine().cacheDir ~ "/.git",
-					"repack",
-					"-d",
-				]).wait();
-			}
+				repackCache(false);
 		}
 	}
 }
