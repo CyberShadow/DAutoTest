@@ -85,30 +85,6 @@ void main()
 			if (buildIDFile.exists)
 				buildID = buildIDFile.readText();
 
-			scope(success)
-			{
-				if (buildID && baseResult && baseResult.buildID)
-				{
-					auto diffFile = testDir ~ "/numstat.txt";
-					if (!diffFile.exists)
-					{
-						auto r = spawnProcess([
-								"git",
-								"--git-dir=" ~ d.needCacheEngine().cacheDir ~ "/.git",
-								"diff",
-								"--numstat",
-								GitCache.refPrefix ~ baseResult.buildID,
-								GitCache.refPrefix ~ buildID,
-							],
-							std.stdio.stdin,
-							File(diffFile, "wb"),
-						).wait();
-						if (r != 0)
-							diffFile.remove();
-					}
-				}
-			}
-
 			auto latestFile = "results/!latest/" ~ sha ~ ".txt";
 			scope(success)
 			{
@@ -207,7 +183,51 @@ void main()
 					}
 				}
 
-				return setStatus("success", "Documentation build OK");
+				int additions=-1, deletions=-1;
+
+				if (buildID && baseResult && baseResult.buildID)
+				{
+					auto diffFile = testDir ~ "/numstat.txt";
+					if (!diffFile.exists)
+					{
+						auto r = spawnProcess([
+								"git",
+								"--git-dir=" ~ d.needCacheEngine().cacheDir ~ "/.git",
+								"diff",
+								"--numstat",
+								GitCache.refPrefix ~ baseResult.buildID,
+								GitCache.refPrefix ~ buildID,
+							],
+							std.stdio.stdin,
+							File(diffFile, "wb"),
+						).wait();
+						if (r == 0)
+						{
+							additions = deletions = 0;
+							foreach (line; diffFile.readText().splitLines().map!(line => line.split("\t")))
+								if (line[0] != "-")
+								{
+									additions += line[0].to!int;
+									deletions += line[1].to!int;
+								}
+						}
+						else
+							diffFile.remove();
+					}
+				}
+
+				string changes;
+				if (!additions && !deletions)
+					changes = "no changes";
+				else
+					changes =
+					(
+						(additions ? ["%d addition%s".format(additions, additions==1 ? "" : "s")] : [])
+						~
+						(deletions ? ["%d deletion%s".format(deletions, deletions==1 ? "" : "s")] : [])
+					).join(", ");
+
+				return setStatus("success", "Documentation OK (%s)".format(changes));
 			}
 			catch (Exception e)
 			{
