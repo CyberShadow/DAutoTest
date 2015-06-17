@@ -14,6 +14,7 @@ import ae.net.http.responseex;
 import ae.net.http.server;
 import ae.net.shutdown;
 import ae.sys.d.cache;
+import ae.sys.file;
 import ae.sys.git;
 import ae.sys.log;
 import ae.utils.exception;
@@ -132,6 +133,10 @@ HttpResponse handleRequest(HttpRequest request, HttpServerConnection conn)
 				return response.serveFile(pathStr[1..$], "web/");
 			case "robots.txt":
 				return response.serveText("User-agent: *\nDisallow: /");
+			case "webhook":
+				if (request.headers.get("X-GitHub-Event", null) == "pull_request")
+					touch("pull-pending.txt");
+				return response.serveText("DAutoTest/webserver OK\n");
 			default:
 				throw new NotFoundException("Unknown resource");
 		}
