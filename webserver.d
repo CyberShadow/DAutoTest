@@ -17,6 +17,7 @@ import ae.sys.d.cache;
 import ae.sys.file;
 import ae.sys.git;
 import ae.sys.log;
+import ae.utils.array;
 import ae.utils.exception;
 import ae.utils.meta;
 import ae.utils.mime;
@@ -134,7 +135,7 @@ HttpResponse handleRequest(HttpRequest request, HttpServerConnection conn)
 			case "robots.txt":
 				return response.serveText("User-agent: *\nDisallow: /");
 			case "webhook":
-				if (request.headers.get("X-GitHub-Event", null) == "pull_request")
+				if (request.headers.get("X-GitHub-Event", null).isOneOf("push", "pull_request"))
 					touch(eventFile);
 				return response.serveText("DAutoTest/webserver OK\n");
 			default:
