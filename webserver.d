@@ -24,6 +24,8 @@ import ae.utils.sini;
 import ae.utils.textout;
 import ae.utils.xmllite;
 
+import common;
+
 struct Config
 {
 	string addr;
