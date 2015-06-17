@@ -174,7 +174,7 @@ void main()
 							log("Website build ID: " ~ buildID);
 						}
 
-						d.build(state, d.config.build);
+						d.build(state);
 					}
 					catch (Exception e)
 					{
