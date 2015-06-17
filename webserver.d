@@ -135,7 +135,7 @@ HttpResponse handleRequest(HttpRequest request, HttpServerConnection conn)
 				return response.serveText("User-agent: *\nDisallow: /");
 			case "webhook":
 				if (request.headers.get("X-GitHub-Event", null) == "pull_request")
-					touch("pull-pending.txt");
+					touch(eventFile);
 				return response.serveText("DAutoTest/webserver OK\n");
 			default:
 				throw new NotFoundException("Unknown resource");

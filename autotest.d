@@ -305,7 +305,16 @@ void main()
 			else
 			{
 				log("Sleeping...");
-				Thread.sleep(1.minutes);
+				foreach (n; 0..300)
+				{
+					if (eventFile.exists)
+					{
+						eventFile.remove();
+						log("Activity detected, resuming...");
+						break;
+					}
+					Thread.sleep(1.seconds);
+				}
 			}
 		}
 		else

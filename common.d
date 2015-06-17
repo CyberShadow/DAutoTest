@@ -33,3 +33,5 @@ bool fileIgnored(string fn)
 {
 	return fn.startsWith("digger-");
 }
+
+const eventFile = "pull-pending.txt";
