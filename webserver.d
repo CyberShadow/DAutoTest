@@ -193,21 +193,27 @@ void showResult(string testDir)
 	auto result = tryReadText(testDir ~ "result.txt", "Unknown\n(unknown)").splitLines();
 	auto info = tryReadText(testDir ~ "info.txt", "\n0").splitLines();
 
+	auto base = testDir.split("/")[0];
+	auto hash = testDir.split("/")[1];
+
 	html.put(
 		`<table>`
-		`<tr><td>Component</td><td>`, info.length ? info[0] : "master", `</td></tr>`
 	);
-	if (info.length >= 2)
-	{
+	if (hash == "!base")
 		html.put(
-		`<tr><td>Pull request</td><td><a href="`, info[2], `">#`, info[1], `</a></td></tr>`
+		`<tr><td>Base commit</td><td>`, base, `</td></tr>`
 		);
-	}
+	else
+		html.put(
+		`<tr><td>Component</td><td>`, info.length ? info[0] : "master", `</td></tr>`
+		`<tr><td>Pull request</td><td><a href="`, info[2], `">#`, info[1], `</a></td></tr>`
+		`<tr><td>Base commit</td><td><a href="../!base/">`, base, `</a></td></tr>`
+		);
 	html.put(
 		`<tr><td>Status</td><td>`, result[0], `</td></tr>`
 		`<tr><td>Details</td><td>`, result[1], `</td></tr>`
 	//	`<tr><td>Build log</td><td><pre>`, tryReadText(testDir ~ "build.log").encodeEntities(), `</pre></td></tr>`
-		`<tr><td>Build log</td><td><a href="build.log">View</a></td></tr>`
+		`<tr><td>Build log</td><td>`, exists(testDir ~ "build.log") ? `<a href="build.log">View</a>` : "-", `</td></tr>`
 		`<tr><td>Files</td><td>`
 			`<a href="file/web/index.html">Main page</a> &middot; `
 			`<a href="file/web/phobos-prerelease/index.html">Phobos</a> &middot; `
