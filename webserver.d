@@ -207,7 +207,7 @@ void showResult(string testDir)
 		html.put(
 		`<tr><td>Component</td><td>`, info.get(0, "master"), `</td></tr>`
 		`<tr><td>Pull request</td><td>`, info.length>2 ? `<a href="` ~ info[2] ~ `">#` ~ info[1] ~ `</a>` : `-`, `</td></tr>`
-		`<tr><td>Base commit</td><td><a href="../!base/">`, base, `</a></td></tr>`
+		`<tr><td>Base result</td><td><a href="../!base/">View</a></td></tr>`
 		);
 	html.put(
 		`<tr><td>Status</td><td>`, result.get(0, "?"), `</td></tr>`
