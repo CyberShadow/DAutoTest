@@ -88,11 +88,8 @@ void main()
 			auto latestFile = "results/!latest/" ~ sha ~ ".txt";
 			scope(success)
 			{
-				if (!latestFile.exists)
-				{
-					ensurePathExists(latestFile);
-					write(latestFile, baseSHA);
-				}
+				ensurePathExists(latestFile);
+				write(latestFile, baseSHA);
 			}
 
 			if (resultFile.exists)
