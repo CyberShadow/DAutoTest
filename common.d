@@ -20,11 +20,12 @@ shared static this()
 
 // ***************************************************************************
 
-Logger log;
-
-static this()
+void log(string s)
 {
-	log = createLogger("DAutoTest");
+	static Logger instance;
+	if (!instance)
+		instance = createLogger("DAutoTest");
+	instance(s);
 }
 
 // ***************************************************************************
