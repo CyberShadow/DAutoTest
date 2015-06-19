@@ -217,6 +217,9 @@ void main()
 				}
 
 				string changes;
+				if (additions==-1 && deletions==-1)
+					changes = "master build";
+				else
 				if (!additions && !deletions)
 					changes = "no changes";
 				else
