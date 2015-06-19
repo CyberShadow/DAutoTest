@@ -195,8 +195,15 @@ void showResult(string testDir)
 
 	html.put(
 		`<table>`
-		`<tr><td>Component</td><td>`, info[0], `</td></tr>`
+		`<tr><td>Component</td><td>`, info.length ? info[0] : "master", `</td></tr>`
+	);
+	if (info.length >= 2)
+	{
+		html.put(
 		`<tr><td>Pull request</td><td><a href="`, info[2], `">#`, info[1], `</a></td></tr>`
+		);
+	}
+	html.put(
 		`<tr><td>Status</td><td>`, result[0], `</td></tr>`
 		`<tr><td>Details</td><td>`, result[1], `</td></tr>`
 	//	`<tr><td>Build log</td><td><pre>`, tryReadText(testDir ~ "build.log").encodeEntities(), `</pre></td></tr>`
