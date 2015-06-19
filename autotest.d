@@ -250,10 +250,27 @@ void main()
 		foreach (repo; repos)
 			pulls ~= githubQuery("https://api.github.com/repos/D-Programming-Language/" ~ repo ~ "/pulls?per_page=100").parseJSON().array;
 
-		log("Sorting pulls...");
-
 		string lastTest(string sha) { auto fn = "results/!latest/" ~ sha ~ ".txt"; return fn.exists ? fn.readText : null; }
 		bool shaTested(string sha) { return lastTest(sha) !is null; }
+
+		log("Verifying pulls...");
+
+		foreach (pull; pulls)
+		{
+			auto sha = pull["head"]["sha"].str;
+			auto last = lastTest(sha);
+			auto dir = "results/" ~ last ~ "/" ~ sha;
+			if (last && !exists(dir))
+			{
+				auto repo = pull["base"]["repo"]["name"].str;
+				int n = pull["number"].integer.to!int;
+				log(dir ~ " doesn't exist, marking as pending");
+				setTestStatus(repo, sha, n, "pending", "Retest pending", null);
+				mkdirRecurse(dir);
+			}
+		}
+
+		log("Sorting pulls...");
 
 		pulls.multiSort!(
 			(a, b) => shaTested(a["head"]["sha"].str) < shaTested(b["head"]["sha"].str),
