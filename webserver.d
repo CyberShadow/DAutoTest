@@ -190,11 +190,11 @@ void showResult(string testDir)
 {
 	string tryReadText(string fileName, string def = null) { return fileName.exists ? fileName.readText : def; }
 
-	auto result = tryReadText(testDir ~ "result.txt", "Unknown\n(unknown)").splitLines();
-	auto info = tryReadText(testDir ~ "info.txt", "\n0").splitLines();
+	auto result = tryReadText(testDir ~ "result.txt").splitLines();
+	auto info = tryReadText(testDir ~ "info.txt").splitLines();
 
-	auto base = testDir.split("/")[0];
-	auto hash = testDir.split("/")[1];
+	auto base = testDir.split("/")[1];
+	auto hash = testDir.split("/")[2];
 
 	html.put(
 		`<table>`
