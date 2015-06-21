@@ -221,7 +221,7 @@ void showResult(string testDir)
 			`<a href="file/web/">All files</a>`
 		`</td></tr>`
 	);
-	if (result[0] == "success" && exists(testDir ~ "numstat.txt"))
+	if (result.get(0, null) == "success" && exists(testDir ~ "numstat.txt"))
 	{
 		auto lines = readText(testDir ~ "numstat.txt").strip.splitLines.map!(line => line.split('\t')).array;
 		int additions, deletions, maxChanges;
