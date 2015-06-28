@@ -162,7 +162,19 @@ mixin DeclareException!q{NotFoundException};
 
 void showIndex()
 {
-	html.put("This is the DAutoTest web service.");
+	html.put("<p>This is the DAutoTest web service.</p>");
+	auto currentBase = readText("results/!latest/!base.txt");
+	auto currentAction = readText("results/!status.txt").split("\n");
+	html.put(
+		`<table>`
+		`<tr><td>Current base</td><td><a href="/results/`, currentBase, `/!base/">`, currentBase, `</a></td></tr>`
+		`<tr><td>Current action</td><td>`,
+			currentAction[1].length ? `<a href="` ~ currentAction[1] ~`">` : null,
+			currentAction[0],
+			currentAction[1].length ? `</a>` : null,
+			`</td></tr>`
+		`</table>`
+	);
 }
 
 void showDirListing(GitObject.TreeEntry[] entries, bool showUpLink)
