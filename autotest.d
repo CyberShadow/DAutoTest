@@ -50,6 +50,8 @@ void main()
 		std.stdio.stderr = f;
 	}
 
+	logAction("Starting");
+
 	d = new DTestManager();
 	d.config.local.workDir = "work".absolutePath();
 	d.config.cache = "git";
@@ -61,6 +63,7 @@ void main()
 
 	while (true)
 	{
+		logAction("Updating");
 		d.update();
 
 		auto baseSHA = d.getMetaRepo().getRef("origin/master");
@@ -236,12 +239,12 @@ void main()
 			}
 		}
 
-		log("Testing base SHA " ~ baseSHA);
+		logAction("Testing base SHA " ~ baseSHA, "/results/" ~ baseSHA ~ "/!base/");
 		auto baseResult = runBuild(null, 0, "!base");
 
 		log(baseResult.status == "success" ? "Base OK." : "Base is unbuildable!");
 
-		log("Fetching pulls...");
+		logAction("Fetching pulls");
 
 		JSONValue[] pulls;
 		foreach (repo; repos)
@@ -250,7 +253,7 @@ void main()
 		string lastTest(string sha) { auto fn = "results/!latest/" ~ sha ~ ".txt"; return fn.exists ? fn.readText : null; }
 		bool shaTested(string sha) { return lastTest(sha) !is null; }
 
-		log("Verifying pulls...");
+		logAction("Verifying pulls");
 
 		foreach (pull; pulls)
 		{
@@ -267,7 +270,7 @@ void main()
 			}
 		}
 
-		log("Sorting pulls...");
+		logAction("Sorting pulls");
 
 		pulls.multiSort!(
 			(a, b) => shaTested(a["head"]["sha"].str) < shaTested(b["head"]["sha"].str),
@@ -283,7 +286,7 @@ void main()
 			auto sha = pull["head"]["sha"].str;
 			auto url = pull["html_url"].str;
 
-			log("Testing %s PR # %d ( %s ), updated %s, SHA %s".format(repo, n, url, pull["updated_at"].str, sha));
+			logAction("Testing %s PR # %d ( %s ), updated %s, SHA %s".format(repo, n, url, pull["updated_at"].str, sha), "/results/%s/%s/".format(baseSHA, sha));
 			auto last = lastTest(sha);
 			if (last)
 				log("  (already tested with base SHA %s)".format(last));
@@ -300,7 +303,7 @@ void main()
 
 		void repackCache(bool full)
 		{
-			log("Running %s repack...".format(full ? "full" : "partial"));
+			logAction("Running %s artifact store repack".format(full ? "full" : "partial"));
 			auto status = spawnProcess([
 				"git",
 				"--git-dir=" ~ d.needCacheEngine().cacheDir ~ "/.git",
@@ -321,7 +324,7 @@ void main()
 			}
 			else
 			{
-				log("Sleeping...");
+				logAction("Idling");
 				foreach (n; 0..300)
 				{
 					if (eventFile.exists)
@@ -340,6 +343,13 @@ void main()
 				repackCache(false);
 		}
 	}
+}
+
+// Communicate what we're doing right now to the web server
+void logAction(string status, string webPath = null)
+{
+	log(status ~ "...");
+	std.file.write("results/!status.txt", status ~ "\n" ~ webPath);
 }
 
 string setTestStatus(string repo, string sha, int pull, string status, string description, string url)
