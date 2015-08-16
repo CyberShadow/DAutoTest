@@ -83,7 +83,7 @@ HttpResponse handleRequest(HttpRequest request, HttpServerConnection conn)
 						showResult(testDir);
 						break;
 					case "build.log":
-						return response.serveFile(pathStr[1..$], "");
+						return response.serveText(cast(string)read(pathStr[1..$]));
 					case "file":
 					{
 						auto buildID = readText(testDir ~ "buildid.txt");
