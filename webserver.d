@@ -304,6 +304,19 @@ shared static this()
 	config = loadIni!Config("webserver.ini");
 }
 
+version (Posix)
+{
+	import core.stdc.signal;
+	import core.sys.posix.signal;
+
+	extern(C) void ignore_sigpipe(int signo) nothrow @nogc @system {}
+
+	static this()
+	{
+		signal(SIGPIPE, &ignore_sigpipe);
+	}
+}
+
 void main()
 {
 	log = createLogger("WebServer");
