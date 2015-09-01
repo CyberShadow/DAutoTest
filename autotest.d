@@ -66,16 +66,15 @@ void main()
 		logAction("Updating");
 		d.update();
 
-		auto baseSHA = d.getMetaRepo().getRef("origin/master");
-		string baseTestDir;
-
 		static struct Result
 		{
 			bool cached;
 			string status, description, testDir, buildID;
 		}
 
-		Result runBuild(string repo, int n, string sha, Result* baseResult = null)
+		Result[string] baseResults;
+
+		Result runBuild(string repo, int n, string sha, string baseSHA)
 		{
 			auto testDir = "results/" ~ baseSHA ~ "/" ~ sha;
 			log("Test directory: " ~ testDir);
@@ -102,18 +101,16 @@ void main()
 				return Result(true, lines[0], lines[1], testDir, buildID);
 			}
 
-			Result setStatus(string status, string description, string urlPath = null)
+			Result setStatus(string status, string description)
 			{
 				if (n)
 					write(testDir ~ "/info.txt", "%s\n%d\nhttps://github.com/D-Programming-Language/%s/pull/%d".format(repo, n, repo, n));
 				if (buildID)
 					write(buildIDFile, buildID);
 
-				if (!urlPath)
-					urlPath = testDir;
 				if (repo)
 				{
-					auto reply = setTestStatus(repo, sha, n, status, description, "http://dtest.thecybershadow.net/" ~ urlPath ~ "/");
+					auto reply = setTestStatus(repo, sha, n, status, description, "http://dtest.thecybershadow.net/" ~ testDir ~ "/");
 					write(testDir ~ "/ghstatus.json", reply);
 				}
 				if (status != "pending")
@@ -121,8 +118,10 @@ void main()
 				return Result(false, status, description, testDir, buildID);
 			}
 
-			if (baseResult && baseResult.status != "success")
-				return setStatus("error", "Git master is not buildable: " ~ baseResult.description, baseTestDir);
+			auto baseResult = baseSHA in baseResults;
+
+			//if (baseResult && baseResult.status != "success")
+			//	return setStatus("error", "Git master is not buildable: " ~ baseResult.description);
 
 			string failStatus = "error";
 
@@ -239,11 +238,6 @@ void main()
 			}
 		}
 
-		logAction("Testing base SHA " ~ baseSHA, "/results/" ~ baseSHA ~ "/!base/");
-		auto baseResult = runBuild(null, 0, "!base");
-
-		log(baseResult.status == "success" ? "Base OK." : "Base is unbuildable!");
-
 		logAction("Fetching pulls");
 
 		JSONValue[] pulls;
@@ -286,6 +280,17 @@ void main()
 			auto sha = pull["head"]["sha"].str;
 			auto url = pull["html_url"].str;
 
+			auto baseBranch = pull["base"]["ref"].str;
+			auto baseSHA = d.getMetaRepo().getRef("origin/" ~ baseBranch);
+
+			if (baseSHA !in baseResults)
+			{
+				logAction("Testing base " ~ baseBranch ~ " SHA " ~ baseSHA, "/results/" ~ baseSHA ~ "/!base/");
+				auto baseResult = baseResults[baseSHA] = runBuild(null, 0, "!base", baseSHA);
+
+				log(baseResult.status == "success" ? "Base OK." : "Base is unbuildable!");
+			}
+
 			logAction("Testing %s PR # %d ( %s ), updated %s, SHA %s".format(repo, n, url, pull["updated_at"].str, sha), "/results/%s/%s/".format(baseSHA, sha));
 			auto last = lastTest(sha);
 			if (last)
@@ -293,7 +298,7 @@ void main()
 			else
 				log("  (never tested before)");
 
-			auto result = runBuild(repo, n, sha, &baseResult);
+			auto result = runBuild(repo, n, sha, baseSHA);
 			if (!result.cached)
 			{
 				foundWork = true;
