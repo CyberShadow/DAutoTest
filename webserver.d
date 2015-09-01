@@ -5,6 +5,7 @@ import std.exception;
 import std.file;
 import std.format;
 import std.functional;
+import std.path;
 import std.regex;
 import std.string;
 
@@ -162,13 +163,24 @@ mixin DeclareException!q{NotFoundException};
 
 void showIndex()
 {
-	html.put("<p>This is the DAutoTest web service.</p>");
-	auto currentBase = readText("results/!latest/!base.txt");
+	html.put(
+		"<p>This is the DAutoTest web service.</p>"
+		`<table>`
+	);
+	foreach (de; dirEntries("results/!latest", "*.txt", SpanMode.shallow))
+	{
+		auto name = de.baseName.stripExtension;
+		if (name.length == 40)
+			continue;
+		auto sha = readText(de.name);
+		html.put(
+			`<tr><td>Current `, encodeEntities(name), ` branch</td><td><a href="/results/`, sha, `/!base/">`, sha, `</a></td></tr>`
+		);
+	}
+
 	auto currentAction = readText("results/!status.txt").split("\n");
 	html.put(
-		`<table>`
-		`<tr><td>Current base</td><td><a href="/results/`, currentBase, `/!base/">`, currentBase, `</a></td></tr>`
-		`<tr><td>Current action</td><td>`,
+			`<tr><td>Current action</td><td>`,
 			currentAction[1].length ? `<a href="` ~ currentAction[1] ~`">` : null,
 			currentAction[0],
 			currentAction[1].length ? `</a>` : null,
