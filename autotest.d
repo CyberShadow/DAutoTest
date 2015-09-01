@@ -359,7 +359,9 @@ void main()
 void logAction(string status, string webPath = null)
 {
 	log(status ~ "...");
-	std.file.write("results/!status.txt", status ~ "\n" ~ webPath);
+	auto statusPath = "results/!status.txt";
+	ensurePathExists(statusPath);
+	std.file.write(statusPath, status ~ "\n" ~ webPath);
 }
 
 string setTestStatus(string repo, string sha, int pull, string status, string description, string url)
