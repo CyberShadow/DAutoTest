@@ -76,7 +76,7 @@ void main()
 
 		Result runBuild(string repo, int n, string sha, string baseSHA)
 		{
-			auto testDir = "results/" ~ baseSHA ~ "/" ~ sha;
+			auto testDir = "results/" ~ baseSHA ~ "/" ~ (repo ? sha : "!base");
 			log("Test directory: " ~ testDir);
 
 			auto resultFile = testDir ~ "/result.txt";
@@ -285,8 +285,8 @@ void main()
 
 			if (baseSHA !in baseResults)
 			{
-				logAction("Testing base " ~ baseBranch ~ " SHA " ~ baseSHA, "/results/" ~ baseSHA ~ "/!base/");
-				auto baseResult = baseResults[baseSHA] = runBuild(null, 0, "!base", baseSHA);
+				logAction("Testing base " ~ baseBranch ~ " SHA " ~ baseSHA, "/results/" ~ baseSHA ~ "/" ~ baseBranch ~ "/");
+				auto baseResult = baseResults[baseSHA] = runBuild(null, 0, baseBranch, baseSHA);
 
 				log(baseResult.status == "success" ? "Base OK." : "Base is unbuildable!");
 			}
