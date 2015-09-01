@@ -306,14 +306,16 @@ shared static this()
 
 version (Posix)
 {
-	import core.stdc.signal;
-	import core.sys.posix.signal;
+	import core.stdc.stdio : fprintf, stderr;
+	import core.stdc.signal : signal;
+	import core.stdc.stdlib : exit;
+	import core.sys.posix.signal : SIGPIPE;
 
-	extern(C) void ignore_sigpipe(int signo) nothrow @nogc @system {}
+	extern(C) void handle_sigpipe(int signo) nothrow @nogc @system { fprintf(stderr, "SIGPIPE!\n"); exit(1); }
 
 	static this()
 	{
-		signal(SIGPIPE, &ignore_sigpipe);
+		signal(SIGPIPE, &handle_sigpipe);
 	}
 }
 
