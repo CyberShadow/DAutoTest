@@ -67,7 +67,7 @@ void main()
 		d.update();
 
 		auto baseSHA = d.getMetaRepo().getRef("origin/master");
-		string baseError, baseTestDir;
+		string baseTestDir;
 
 		static struct Result
 		{
@@ -122,7 +122,7 @@ void main()
 			}
 
 			if (baseResult && baseResult.status != "success")
-				return setStatus("error", "Git master is not buildable: " ~ baseError, baseTestDir);
+				return setStatus("error", "Git master is not buildable: " ~ baseResult.description, baseTestDir);
 
 			string failStatus = "error";
 
