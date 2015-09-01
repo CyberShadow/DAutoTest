@@ -289,6 +289,11 @@ void main()
 				auto baseResult = baseResults[baseSHA] = runBuild(null, 0, baseBranch, baseSHA);
 
 				log(baseResult.status == "success" ? "Base OK." : "Base is unbuildable!");
+				if (!baseResult.cached)
+				{
+					foundWork = true;
+					break;
+				}
 			}
 
 			logAction("Testing %s PR # %d ( %s ), updated %s, SHA %s".format(repo, n, url, pull["updated_at"].str, sha), "/results/%s/%s/".format(baseSHA, sha));
