@@ -11,13 +11,13 @@ import std.process;
 import std.string;
 
 import ae.net.ssl.openssl;
-import ae.sys.cmd : NULL_FILE;
 import ae.sys.d.cache;
 import ae.sys.log;
 import ae.sys.net.ae;
 import ae.sys.d.manager;
 import ae.sys.file;
 import ae.utils.json;
+import ae.utils.path : nullFileName;
 
 import common;
 import github;
