@@ -64,19 +64,10 @@ void main()
 	while (true)
 	{
 		logAction("Updating");
-		while (true)
-		{
-			try
-			{
-				d.update();
-				break;
-			}
-			catch (Exception e)
-			{
-				log("Update error: " ~ e.msg);
-				Thread.sleep(1.minutes);
-			}
-		}
+		try
+			d.update();
+		catch (Exception e)
+			log("Update error: " ~ e.msg);
 
 		static struct Result
 		{
