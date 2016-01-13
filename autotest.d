@@ -117,7 +117,7 @@ void main()
 					write(testDir ~ "/ghstatus.json", reply);
 				}
 				if (status != "pending")
-					write(resultFile, "%s\n%s".format(status, description));
+					atomicWrite(resultFile, "%s\n%s".format(status, description));
 				return Result(false, status, description, testDir, buildID);
 			}
 
