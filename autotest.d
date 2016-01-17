@@ -332,7 +332,7 @@ void main()
 			log("Nothing to do...");
 			if (repackCounter)
 			{
-				repackCache(true);
+				repackCache(/*true*/false);
 				repackCounter = 0;
 			}
 			else
