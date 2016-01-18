@@ -184,6 +184,8 @@ void main()
 						throw new Exception("Build failed");
 					}
 				}
+				if (logFile.exists && (cast(string)read(logFile)).indexOf("error: unable to read sha1 file of ") >= 0)
+					log("Git corruption detected!");
 
 				int additions=-1, deletions=-1;
 
