@@ -45,9 +45,11 @@ void main()
 {
 	if (quiet)
 	{
-		auto f = File("autotest.log", "wb");
-		std.stdio.stdout = f;
-		std.stdio.stderr = f;
+		auto logFile = File("autotest.log", "wb");
+		auto pipes = pipe();
+		spawnProcess(["ts", "[%Y-%m-%d %H:%M:%S]"], pipes.readEnd, logFile, logFile);
+		std.stdio.stdout = pipes.writeEnd;
+		std.stdio.stderr = pipes.writeEnd;
 	}
 
 	logAction("Starting");
