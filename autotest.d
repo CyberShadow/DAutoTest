@@ -183,11 +183,11 @@ void main()
 					catch (Exception e)
 					{
 						redirected.f.writeln("Build failed: ", e.toString());
+						if (logFile.exists && (cast(string)read(logFile)).indexOf("error: unable to read sha1 file of ") >= 0)
+							log("Git corruption detected!");
 						throw new Exception("Build failed");
 					}
 				}
-				if (logFile.exists && (cast(string)read(logFile)).indexOf("error: unable to read sha1 file of ") >= 0)
-					log("Git corruption detected!");
 
 				int additions=-1, deletions=-1;
 
