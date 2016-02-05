@@ -334,7 +334,7 @@ void main()
 		if (!foundWork)
 		{
 			log("Nothing to do...");
-			if (repackCounter)
+			if (/*repackCounter*/false)
 			{
 				repackCache(/*true*/false);
 				repackCounter = 0;
@@ -356,8 +356,8 @@ void main()
 		}
 		else
 		{
-			if (repackCounter++ % 10 == 0)
-				repackCache(false);
+		//	if (repackCounter++ % 10 == 0)
+		//		repackCache(false);
 		}
 	}
 }
