@@ -130,8 +130,12 @@ void main()
 
 			string failStatus = "error";
 
+			auto logFile = testDir ~ "/build.log";
 			try
 			{
+				log("Sending output to %s".format(logFile));
+				auto redirected = RedirectOutput(logFile);
+
 				setStatus("pending", "Building documentation");
 
 				auto state = d.begin(baseSHA);
@@ -166,10 +170,8 @@ void main()
 
 				failStatus = "failure";
 
-				auto logFile = testDir ~ "/build.log";
-				log("Running build (sending output to %s)".format(logFile));
+				log("Running build");
 				{
-					auto redirected = RedirectOutput(logFile);
 					try
 					{
 						scope(exit)
@@ -183,8 +185,6 @@ void main()
 					catch (Exception e)
 					{
 						redirected.f.writeln("Build failed: ", e.toString());
-						if (logFile.exists && (cast(string)read(logFile)).indexOf("error: unable to read sha1 file of ") >= 0)
-							log("Git corruption detected!");
 						throw new Exception("Build failed");
 					}
 				}
@@ -241,6 +241,8 @@ void main()
 			catch (Exception e)
 			{
 				log("Error: " ~ e.msg);
+				if (logFile.exists && (cast(string)read(logFile)).indexOf("error: unable to read sha1 file of ") >= 0)
+					log("Git corruption detected!");
 				return setStatus(failStatus, e.msg);
 			}
 		}
