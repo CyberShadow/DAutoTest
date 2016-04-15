@@ -4,10 +4,12 @@ import std.conv;
 import std.digest.md;
 import std.file;
 import std.string;
+import std.utf;
 
 import ae.net.asockets;
 import ae.net.http.client;
 import ae.net.http.common;
+import ae.net.ietf.url;
 import ae.sys.file;
 import ae.utils.digest;
 import ae.utils.json;
@@ -39,37 +41,51 @@ void githubQuery(string url, void delegate(string) handleData, void delegate(str
 	}
 
 	log("Getting URL " ~ url);
-	httpRequest(request,
-		(HttpResponse response, string disconnectReason)
+
+	void resultHandler(HttpResponse response, string disconnectReason)
+	{
+		if (!response)
+			handleError("Error with URL " ~ url ~ ": " ~ disconnectReason);
+		else
 		{
-			if (!response)
-				handleError("Error with URL " ~ url ~ ": " ~ disconnectReason);
-			else
+			string s;
+			if (response.status == HttpStatusCode.NotModified)
 			{
-				string s;
-				if (response.status == HttpStatusCode.NotModified)
-				{
-					log(" > Cache hit");
-					s = cacheEntry.data;
-					handleData(s);
-				}
-				else
-				if (response.status == HttpStatusCode.OK)
-				{
-					log(" > Cache hit");
-					scope(failure) log(response.headers.text);
-					s = (cast(char[])response.getContent().contents).idup;
-					cacheEntry.etag = response.headers.get("ETag", null);
-					cacheEntry.lastModified = response.headers.get("Last-Modified", null);
-					cacheEntry.data = s;
-					ensurePathExists(cacheFileName);
-					write(cacheFileName, toJson(cacheEntry));
-					handleData(s);
-				}
-				else
-					handleError("Error with URL " ~ url ~ ": " ~ text(response.status));
+				log(" > Cache hit");
+				s = cacheEntry.data;
+				handleData(s);
 			}
-		});
+			else
+			if (response.status == HttpStatusCode.OK)
+			{
+				log(" > Cache hit");
+				scope(failure) log(response.headers.text);
+				s = (cast(char[])response.getContent().contents).idup;
+				cacheEntry.etag = response.headers.get("ETag", null);
+				cacheEntry.lastModified = response.headers.get("Last-Modified", null);
+				cacheEntry.data = s;
+				ensurePathExists(cacheFileName);
+				write(cacheFileName, toJson(cacheEntry));
+				handleData(s);
+			}
+			else
+			if (response.status >= 300 && response.status < 400 && "Location" in response.headers)
+			{
+				auto location = response.headers["Location"];
+				log(" > Redirect: " ~ location);
+				request.resource = applyRelativeURL(request.url, location);
+				if (response.status == HttpStatusCode.SeeOther)
+				{
+					request.method = "GET";
+					request.data = null;
+				}
+				httpRequest(request, &resultHandler);
+			}
+			else
+				handleError("Error with URL " ~ url ~ ": " ~ text(response.status));
+		}
+	}
+	httpRequest(request, &resultHandler);
 }
 
 string githubQuery(string url)
