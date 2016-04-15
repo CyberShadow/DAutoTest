@@ -58,7 +58,7 @@ void githubQuery(string url, void delegate(string) handleData, void delegate(str
 			else
 			if (response.status == HttpStatusCode.OK)
 			{
-				log(" > Cache hit");
+				log(" > Cache miss");
 				scope(failure) log(response.headers.text);
 				s = (cast(char[])response.getContent().contents).idup;
 				cacheEntry.etag = response.headers.get("ETag", null);
