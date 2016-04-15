@@ -53,6 +53,7 @@ void main()
 	d.config.local.workDir = "work".absolutePath();
 	d.config.cache = "git";
 	d.config.environment = config.env.dup.byPair.assocArray;
+	d.config.autoClean = true;
 
 	foreach (c; d.allComponents)
 		d.config.build.components.enable[c] = c == "website";
