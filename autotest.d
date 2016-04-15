@@ -1,6 +1,7 @@
 import core.thread;
 
 import std.algorithm;
+import std.array;
 import std.conv;
 import std.exception;
 import std.file;
@@ -8,6 +9,7 @@ import std.format;
 import std.json;
 import std.path;
 import std.process;
+import std.stdio : File;
 import std.string;
 
 import ae.net.ssl.openssl;
@@ -22,19 +24,12 @@ import ae.utils.path : nullFileName;
 import common;
 import github;
 
+static import std.stdio;
+
 class DTestManager : DManager
 {
 	override string getCallbackCommand() { assert(false); }
 	override void log(string s) { .log(s); }
-	override void prepareEnv()
-	{
-		super.prepareEnv();
-		foreach (k, v; .config.env)
-			if (k == "PATH")
-				config.env[k] = config.env[k] ~ pathSeparator ~ v;
-			else
-				config.env[k] = v;
-	}
 }
 
 DTestManager d;
@@ -57,6 +52,7 @@ void main()
 	d = new DTestManager();
 	d.config.local.workDir = "work".absolutePath();
 	d.config.cache = "git";
+	d.config.environment = config.env.dup.byPair.assocArray;
 
 	foreach (c; d.allComponents)
 		d.config.build.components.enable[c] = c == "website";
