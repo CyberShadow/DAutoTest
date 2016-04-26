@@ -51,9 +51,9 @@ void main()
 
 	d = new DTestManager();
 	d.config.local.workDir = "work".absolutePath();
-	d.config.cache = "git";
-	d.config.environment = config.env.dup.byPair.assocArray;
-	d.config.autoClean = true;
+	d.config.local.cache = "git";
+	d.config.build.environment = config.env.dup.byPair.assocArray;
+	d.autoClean = true;
 
 	foreach (c; d.allComponents)
 		d.config.build.components.enable[c] = c == "website";
