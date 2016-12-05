@@ -335,7 +335,9 @@ void main()
 {
 	log = createLogger("WebServer");
 
-	cache = Repository("work/cache-git/v2/");
+	import ae.sys.d.manager : DManager;
+
+	cache = Repository("work/cache-git/v%s/".format(DManager.cacheVersion));
 	objectReader = cache.createObjectReader();
 
 	auto server = new HttpServer();
