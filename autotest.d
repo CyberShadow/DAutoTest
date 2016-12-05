@@ -106,7 +106,7 @@ void main()
 			Result setStatus(string status, string description)
 			{
 				if (n)
-					write(testDir ~ "/info.txt", "%s\n%d\nhttps://github.com/D-Programming-Language/%s/pull/%d".format(repo, n, repo, n));
+					write(testDir ~ "/info.txt", "%s\n%d\nhttps://github.com/dlang/%s/pull/%d".format(repo, n, repo, n));
 				if (buildID)
 					write(buildIDFile, buildID);
 
@@ -248,7 +248,7 @@ void main()
 
 		JSONValue[] pulls;
 		foreach (repo; repos)
-			pulls ~= githubQuery("https://api.github.com/repos/D-Programming-Language/" ~ repo ~ "/pulls?per_page=100").parseJSON().array;
+			pulls ~= githubQuery("https://api.github.com/repos/dlang/" ~ repo ~ "/pulls?per_page=100").parseJSON().array;
 
 		string lastTest(string sha) { auto fn = "results/!latest/" ~ sha ~ ".txt"; return fn.exists ? fn.readText : null; }
 		bool shaTested(string sha) { return lastTest(sha) !is null; }
@@ -378,7 +378,7 @@ string setTestStatus(string repo, string sha, int pull, string status, string de
 		return "OK";
 	else
 		return githubPost(
-			"https://api.github.com/repos/D-Programming-Language/%s/statuses/%s".format(repo, sha),
+			"https://api.github.com/repos/dlang/%s/statuses/%s".format(repo, sha),
 			[
 				"state" : status,
 				"target_url" : url,
