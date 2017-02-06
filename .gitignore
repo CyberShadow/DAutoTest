@@ -3,8 +3,15 @@
 *.pdb
 *.suo
 *.ilk
+
 /autotest
 /autotest.ini
+/autotest.log
+
+/webserver
+/webserver.ini
+
+/pull-pending.txt
 
 /work
 /logs
