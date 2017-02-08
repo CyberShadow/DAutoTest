@@ -164,7 +164,7 @@ mixin DeclareException!q{NotFoundException};
 void showIndex()
 {
 	html.put(
-		"<p>This is the DAutoTest web service.</p>"
+		"<p>This is the DAutoTest web service.</p>" ~
 		`<table>`
 	);
 	foreach (de; dirEntries("results/!latest", "*.txt", SpanMode.shallow))
@@ -184,7 +184,7 @@ void showIndex()
 			currentAction[1].length ? `<a href="` ~ currentAction[1] ~`">` : null,
 			currentAction[0],
 			currentAction[1].length ? `</a>` : null,
-			`</td></tr>`
+			`</td></tr>` ~
 		`</table>`
 	);
 }
@@ -229,20 +229,20 @@ void showResult(string testDir)
 		);
 	else
 		html.put(
-		`<tr><td>Component</td><td>`, info.get(0, "master"), `</td></tr>`
-		`<tr><td>Pull request</td><td>`, info.length>2 ? `<a href="` ~ info[2] ~ `">#` ~ info[1] ~ `</a>` : `-`, `</td></tr>`
+		`<tr><td>Component</td><td>`, info.get(0, "master"), `</td></tr>` ~
+		`<tr><td>Pull request</td><td>`, info.length>2 ? `<a href="` ~ info[2] ~ `">#` ~ info[1] ~ `</a>` : `-`, `</td></tr>` ~
 		`<tr><td>Base result</td><td><a href="../!base/">View</a></td></tr>`
 		);
 	html.put(
-		`<tr><td>Status</td><td>`, result.get(0, "?"), `</td></tr>`
-		`<tr><td>Details</td><td>`, result.get(1, "?"), `</td></tr>`
+		`<tr><td>Status</td><td>`, result.get(0, "?"), `</td></tr>` ~
+		`<tr><td>Details</td><td>`, result.get(1, "?"), `</td></tr>` ~
 	//	`<tr><td>Build log</td><td><pre>`, tryReadText(testDir ~ "build.log").encodeEntities(), `</pre></td></tr>`
-		`<tr><td>Build log</td><td>`, exists(testDir ~ "build.log") ? `<a href="build.log">View</a>` : "-", `</td></tr>`
-		`<tr><td>Files</td><td>`
-			`<a href="file/web/index.html">Main page</a> &middot; `
-			`<a href="file/web/phobos-prerelease/index.html">Phobos</a> &middot; `
-			`<a href="file/web/library-prerelease/index.html">DDox</a> &middot; `
-			`<a href="file/web/">All files</a>`
+		`<tr><td>Build log</td><td>`, exists(testDir ~ "build.log") ? `<a href="build.log">View</a>` : "-", `</td></tr>` ~
+		`<tr><td>Files</td><td>` ~
+			`<a href="file/web/index.html">Main page</a> &middot; ` ~
+			`<a href="file/web/phobos-prerelease/index.html">Phobos</a> &middot; ` ~
+			`<a href="file/web/library-prerelease/index.html">DDox</a> &middot; ` ~
+			`<a href="file/web/">All files</a>` ~
 		`</td></tr>`
 	);
 	if (result.get(0, null) == "success" && exists(testDir ~ "numstat.txt"))
@@ -262,7 +262,7 @@ void showResult(string testDir)
 		}
 
 		html.put(
-			`<tr><td>Changes</td><td>`
+			`<tr><td>Changes</td><td>` ~
 			`<table class="changes">`
 		);
 		if (!lines.length)
@@ -282,17 +282,17 @@ void showResult(string testDir)
 				html.put(`<div class="deletions" style="width:%5.3f%%" title="%s deletion%s"></div>`.format(line[1].to!int * changeWidth, line[1], line[1]=="1" ? "" : "s"));
 			}
 			html.put(
-				`</td>`
-				`<td>`
-					`<a href="../!base/file/`, encodeEntities(fn), `">Old</a> `
-					`<a href="file/`, encodeEntities(fn), `">New</a> `
-					`<a href="diff/`, encodeEntities(fn), `">Diff</a>`
-				`</td>`
+				`</td>` ~
+				`<td>` ~
+					`<a href="../!base/file/`, encodeEntities(fn), `">Old</a> ` ~
+					`<a href="file/`, encodeEntities(fn), `">New</a> ` ~
+					`<a href="diff/`, encodeEntities(fn), `">Diff</a>` ~
+				`</td>` ~
 				`</tr>`
 			);
 		}
 		html.put(
-			`</table>`
+			`</table>` ~
 			`</td></tr>`
 		);
 	}
