@@ -1,6 +1,7 @@
 import std.algorithm;
 import std.array;
 import std.conv;
+import std.datetime;
 import std.exception;
 import std.file;
 import std.format;
@@ -25,6 +26,7 @@ import ae.utils.mime;
 import ae.utils.regex;
 import ae.utils.sini;
 import ae.utils.textout;
+import ae.utils.time.format;
 import ae.utils.xmllite;
 
 import common;
@@ -67,6 +69,12 @@ HttpResponse handleRequest(HttpRequest request, HttpServerConnection conn)
 			case "":
 				title = "Index";
 				showIndex();
+				break;
+			case "history":
+				enforce!NotFoundException(path.length == 2, "Bad path");
+				auto branch = path[1];
+				title = "Branch history - " ~ branch;
+				showHistory(branch);
 				break;
 			case "results":
 				title = "Test result";
@@ -165,7 +173,8 @@ void showIndex()
 {
 	html.put(
 		"<p>This is the DAutoTest web service.</p>" ~
-		`<table>`
+		`<table>` ~
+		`<tr><th>Branch</th><th>Commit</th><th>Status</th></tr>`
 	);
 	foreach (de; dirEntries("results/!latest", "*.txt", SpanMode.shallow))
 	{
@@ -173,20 +182,70 @@ void showIndex()
 		if (name.length == 40)
 			continue;
 		auto sha = readText(de.name);
+		auto resultFn = "results/" ~ sha ~ "/!base/result.txt";
+		auto status = resultFn.exists ? resultFn.readText().splitLines()[0] : "-";
 		html.put(
-			`<tr><td>Current `, encodeEntities(name), ` branch</td><td><a href="/results/`, sha, `/!base/">`, sha, `</a></td></tr>`
+			`<tr>` ~
+			`<td><a href="/history/`, encodeEntities(name), `">`, encodeEntities(name), `</a></td>` ~
+			`<td>`, sha, `</td>` ~
+			`<td><a href="/results/`, sha, `/!base/">`, status, `</a></td>` ~
+			`</tr>`
 		);
 	}
 
 	auto currentAction = readText("results/!status.txt").split("\n");
 	html.put(
-			`<tr><td>Current action</td><td>`,
+		`</table>` ~
+
+		`<p><b>Current action</b>: `,
 			currentAction[1].length ? `<a href="` ~ currentAction[1] ~`">` : null,
 			currentAction[0],
 			currentAction[1].length ? `</a>` : null,
-			`</td></tr>` ~
-		`</table>`
+		`</p>`
 	);
+}
+
+void showHistory(string branch)
+{
+	Commit*[] commits;
+	{
+		auto repo = Repository("work/repo");
+		auto history = repo.getHistory();
+		auto hash = *enforce(("refs/remotes/origin/" ~ branch) in history.refs, "Unknown branch");
+		auto commit = history.commits[hash];
+		while (commits.length < 100)
+		{
+			commits ~= commit;
+			if (!commit.parents.length)
+				break;
+			commit = commit.parents[0];
+		}
+	}
+
+	html.put(
+		`<table>` ~
+		`<tr>` ~
+	//	`<th>Commit</th>` ~
+		`<th>Date</th>` ~
+		`<th>Title</th>` ~
+		`<th>Result</th>` ~
+		`</tr>`
+	);
+	foreach (commit; commits)
+	{
+		auto sha = commit.hash.toString();
+		auto resultFn = "results/" ~ sha ~ "/!base/result.txt";
+		auto status = resultFn.exists ? resultFn.readText().splitLines()[0] : "-";
+
+		html.put(
+			`<tr>` ~
+		//	`<td>`, sha, `</td>` ~
+			`<td>`, SysTime.fromUnixTime(commit.time).formatTime!`Y-m-d H:i:s`, `</td>` ~
+			`<td>`, encodeEntities(commit.message[0]), `</td>` ~
+			`<td><a href="/results/`, sha, `/!base/">`, status, `</a></td>` ~
+			`</tr>`
+		);
+	}
 }
 
 void showDirListing(GitObject.TreeEntry[] entries, bool showUpLink)
