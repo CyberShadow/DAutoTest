@@ -1,5 +1,6 @@
 module github;
 
+import std.algorithm;
 import std.conv;
 import std.digest.md;
 import std.file;
@@ -18,10 +19,11 @@ import common : config, log;
 
 struct CacheEntry
 {
-	string etag, lastModified, data;
+	string[string] headers;
+	string data;
 }
 
-void githubQuery(string url, void delegate(string) handleData, void delegate(string) handleError)
+void githubQuery(string url, void delegate(string[string], string) handleData, void delegate(string) handleError)
 {
 	auto request = new HttpRequest;
 	request.resource = url;
@@ -34,10 +36,10 @@ void githubQuery(string url, void delegate(string) handleData, void delegate(str
 	{
 		cacheEntry = jsonParse!CacheEntry(readText(cacheFileName));
 
-		if (cacheEntry.etag)
-			request.headers["If-None-Match"] = cacheEntry.etag;
-		if (cacheEntry.lastModified)
-			request.headers["If-Modified-Since"] = cacheEntry.lastModified;
+		if (auto p = "ETag" in cacheEntry.headers)
+			request.headers["If-None-Match"] = *p;
+		if (auto p = "Last-Modified" in cacheEntry.headers)
+			request.headers["If-Modified-Since"] = *p;
 	}
 
 	log("Getting URL " ~ url);
@@ -48,25 +50,23 @@ void githubQuery(string url, void delegate(string) handleData, void delegate(str
 			handleError("Error with URL " ~ url ~ ": " ~ disconnectReason);
 		else
 		{
-			string s;
 			if (response.status == HttpStatusCode.NotModified)
 			{
 				log(" > Cache hit");
-				s = cacheEntry.data;
-				handleData(s);
+				handleData(cacheEntry.headers, cacheEntry.data);
 			}
 			else
 			if (response.status == HttpStatusCode.OK)
 			{
 				log(" > Cache miss");
 				scope(failure) log(response.headers.text);
-				s = (cast(char[])response.getContent().contents).idup;
-				cacheEntry.etag = response.headers.get("ETag", null);
-				cacheEntry.lastModified = response.headers.get("Last-Modified", null);
-				cacheEntry.data = s;
+				auto headers = response.headers.to!(string[string]);
+				auto data = (cast(char[])response.getContent().contents).idup;
+				cacheEntry.headers = headers;
+				cacheEntry.data = data;
 				ensurePathExists(cacheFileName);
 				write(cacheFileName, toJson(cacheEntry));
-				handleData(s);
+				handleData(headers, data);
 			}
 			else
 			if (response.status >= 300 && response.status < 400 && "Location" in response.headers)
@@ -93,7 +93,7 @@ string githubQuery(string url)
 	string result;
 
 	githubQuery(url,
-		(string dataReceived)
+		(string[string] headers, string dataReceived)
 		{
 			result = dataReceived;
 		},
@@ -105,6 +105,72 @@ string githubQuery(string url)
 
 	socketManager.loop();
 	return result;
+}
+
+import std.json;
+
+JSONValue[] githubPagedQuery(string url)
+{
+	JSONValue[] result;
+
+	void getPage(string url)
+	{
+		githubQuery(url,
+			(string[string] headers, string data)
+			{
+				result ~= data.parseJSON().array;
+				auto links = parseLinks(headers.get("Link", null));
+				if ("next" in links)
+					getPage(links["next"]);
+			},
+			(string error)
+			{
+				throw new Exception(error);
+			}
+		);
+	}
+
+	getPage(url);
+	socketManager.loop();
+	return result;
+}
+
+/// Parse a "Link" header.
+string[string] parseLinks(string s)
+{
+	string[string] result;
+	auto items = s.split(", "); // Hacky but should never occur inside an URL or "rel" value
+	foreach (item; items)
+	{
+		auto parts = item.split("; "); // ditto
+		string url; string[string] args;
+		foreach (part; parts)
+		{
+			if (part.startsWith("<") && part.endsWith(">"))
+				url = part[1..$-1];
+			else
+			{
+				auto ps = part.findSplit("=");
+				auto key = ps[0];
+				auto value = ps[2];
+				if (value.startsWith('"') && value.endsWith('"'))
+					value = value[1..$-1];
+				args[key] = value;
+			}
+		}
+		result[args.get("rel", null)] = url;
+	}
+	return result;
+}
+
+unittest
+{
+	auto header = `<https://api.github.com/repositories/1257070/pulls?per_page=100&page=2>; rel="next", ` ~
+		`<https://api.github.com/repositories/1257070/pulls?per_page=100&page=3>; rel="last"`;
+	assert(parseLinks(header) == [
+		"next" : "https://api.github.com/repositories/1257070/pulls?per_page=100&page=2",
+		"last" : "https://api.github.com/repositories/1257070/pulls?per_page=100&page=3",
+	]);
 }
 
 string githubPost(string url, string jsonData)

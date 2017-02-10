@@ -248,7 +248,7 @@ void main()
 
 		JSONValue[] pulls;
 		foreach (repo; repos)
-			pulls ~= githubQuery("https://api.github.com/repos/dlang/" ~ repo ~ "/pulls?per_page=100").parseJSON().array;
+			pulls ~= githubPagedQuery("https://api.github.com/repos/dlang/" ~ repo ~ "/pulls?per_page=100");
 
 		string lastTest(string sha) { auto fn = "results/!latest/" ~ sha ~ ".txt"; return fn.exists ? fn.readText : null; }
 		bool shaTested(string sha) { return lastTest(sha) !is null; }
