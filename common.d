@@ -8,6 +8,7 @@ struct Config
 	string token;
 	string[string] env;
 	string basePulls;
+	string webRoot = "http://dtest.dlang.io/";
 }
 
 immutable Config config;

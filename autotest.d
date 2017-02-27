@@ -112,7 +112,7 @@ void main()
 
 				if (repo)
 				{
-					auto reply = setTestStatus(repo, sha, n, status, description, "http://dtest.thecybershadow.net/" ~ testDir ~ "/");
+					auto reply = setTestStatus(repo, sha, n, status, description, config.webRoot ~ testDir ~ "/");
 					write(testDir ~ "/ghstatus.json", reply);
 				}
 				if (status != "pending")
