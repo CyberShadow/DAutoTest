@@ -58,7 +58,7 @@ void main()
 	foreach (c; d.allComponents)
 		d.config.build.components.enable[c] = c == "website";
 	d.config.build.components.common.makeArgs = ["-j", "8"];
-	d.config.build.components.website.noDateTime = true;
+	d.config.build.components.website.diffable = true;
 
 	while (true)
 	{
