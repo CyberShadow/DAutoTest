@@ -99,8 +99,11 @@ void main()
 			if (resultFile.exists)
 			{
 				auto lines = resultFile.readText().splitLines();
-				log("Already tested: %s (%s)".format(lines[0], lines[1]));
-				return Result(true, lines[0], lines[1], testDir, buildID);
+				if (lines.length >= 2)
+				{
+					log("Already tested: %s (%s)".format(lines[0], lines[1]));
+					return Result(true, lines[0], lines[1], testDir, buildID);
+				}
 			}
 
 			Result setStatus(string status, string description)
