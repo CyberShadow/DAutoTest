@@ -287,6 +287,9 @@ void main()
 			auto url = pull["html_url"].str;
 
 			auto baseBranch = pull["base"]["ref"].str;
+			if (config.ignoreBranch.get(baseBranch, false))
+				continue;
+
 			auto baseSHA = d.getMetaRepo().getRef("origin/" ~ baseBranch);
 
 			if (baseSHA !in baseResults)

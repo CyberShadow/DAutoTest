@@ -9,6 +9,7 @@ struct Config
 	string[string] env;
 	string basePulls;
 	string webRoot = "http://dtest.dlang.io/";
+	bool[string] ignoreBranch;
 }
 
 immutable Config config;
