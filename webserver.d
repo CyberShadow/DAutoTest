@@ -198,9 +198,9 @@ void showIndex()
 		`</table>` ~
 
 		`<p><b>Current action</b>: `,
-			currentAction[1].length ? `<a href="` ~ currentAction[1] ~`">` : null,
-			currentAction[0],
-			currentAction[1].length ? `</a>` : null,
+			currentAction.get(1, null).length ? `<a href="` ~ currentAction[1] ~`">` : null,
+			currentAction.get(0, "Unknown"),
+			currentAction.get(1, null).length ? `</a>` : null,
 		`</p>`
 	);
 }
