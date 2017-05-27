@@ -292,19 +292,22 @@ void showResult(string testDir)
 		`<tr><td>Pull request</td><td>`, info.length>2 ? `<a href="` ~ info[2] ~ `">#` ~ info[1] ~ `</a>` : `-`, `</td></tr>` ~
 		`<tr><td>Base result</td><td><a href="../!base/">View</a></td></tr>`
 		);
+
+	bool success = result.get(0, null) == "success";
+	string tentative = success ? `` : ` class="tentative" title="(tentative)"`;
 	html.put(
 		`<tr><td>Status</td><td>`, result.get(0, "?"), `</td></tr>` ~
 		`<tr><td>Details</td><td>`, result.get(1, "?"), `</td></tr>` ~
 	//	`<tr><td>Build log</td><td><pre>`, tryReadText(testDir ~ "build.log").encodeEntities(), `</pre></td></tr>`
 		`<tr><td>Build log</td><td>`, exists(testDir ~ "build.log") ? `<a href="build.log">View</a>` : "-", `</td></tr>` ~
 		`<tr><td>Files</td><td>` ~
-			`<a href="file/web/index.html">Main page</a> &middot; ` ~
-			`<a href="file/web/phobos-prerelease/index.html">Phobos</a> &middot; ` ~
-			`<a href="file/web/library-prerelease/index.html">DDox</a> &middot; ` ~
-			`<a href="file/web/">All files</a>` ~
+			`<a href="file/web/index.html"`, tentative, `>Main page</a> &middot; ` ~
+			`<a href="file/web/phobos-prerelease/index.html"`, tentative, `>Phobos</a> &middot; ` ~
+			`<a href="file/web/library-prerelease/index.html"`, tentative, `>DDox</a> &middot; ` ~
+			`<a href="file/web/"`, tentative, `>All files</a>` ~
 		`</td></tr>`
 	);
-	if (result.get(0, null) == "success" && exists(testDir ~ "numstat.txt"))
+	if (success && exists(testDir ~ "numstat.txt"))
 	{
 		auto lines = readText(testDir ~ "numstat.txt").strip.splitLines.map!(line => line.split('\t')).array;
 		int additions, deletions, maxChanges;
