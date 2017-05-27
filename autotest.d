@@ -297,7 +297,7 @@ void main()
 
 			if (baseSHA !in baseResults)
 			{
-				logAction("Testing base " ~ baseBranch ~ " SHA " ~ baseSHA, "/results/" ~ baseSHA ~ "/" ~ baseBranch ~ "/");
+				logAction("Testing base " ~ baseBranch ~ " SHA " ~ baseSHA, "/results/" ~ baseSHA ~ "/!base/");
 				auto baseResult = baseResults[baseSHA] = runBuild(null, 0, baseBranch, baseSHA);
 
 				log(baseResult.status == "success" ? "Base OK." : "Base is unbuildable!");
