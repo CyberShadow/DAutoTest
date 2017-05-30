@@ -253,8 +253,9 @@ void main()
 		foreach (repo; repos)
 			pulls ~= githubPagedQuery("https://api.github.com/repos/dlang/" ~ repo ~ "/pulls?per_page=100");
 
-		string lastTest(string sha) { auto fn = "results/!latest/" ~ sha ~ ".txt"; return fn.exists ? fn.readText : null; }
-		bool shaTested(string sha) { return lastTest(sha) !is null; }
+		static string lastTest(string sha) { auto fn = "results/!latest/" ~ sha ~ ".txt"; return fn.exists ? fn.readText : null; }
+		static bool shaTested(string sha) { return lastTest(sha) !is null; }
+		static bool shouldSkip(JSONValue pull) { return config.ignoredBranches.canFind(pull["base"]["ref"].str); }
 
 		logAction("Verifying pulls");
 
@@ -263,7 +264,7 @@ void main()
 			auto sha = pull["head"]["sha"].str;
 			auto last = lastTest(sha);
 			auto dir = "results/" ~ last ~ "/" ~ sha;
-			if (last && !exists(dir))
+			if (last && !exists(dir) && !shouldSkip(pull))
 			{
 				auto repo = pull["base"]["repo"]["name"].str;
 				int n = pull["number"].integer.to!int;
@@ -284,15 +285,15 @@ void main()
 
 		foreach (pull; pulls)
 		{
+			if (shouldSkip(pull))
+				continue;
+
 			auto repo = pull["base"]["repo"]["name"].str;
 			int n = pull["number"].integer.to!int;
 			auto sha = pull["head"]["sha"].str;
 			auto url = pull["html_url"].str;
 
 			auto baseBranch = pull["base"]["ref"].str;
-			if (config.ignoredBranches.canFind(baseBranch))
-				continue;
-
 			auto baseSHA = d.getMetaRepo().getRef("origin/" ~ baseBranch);
 
 			if (baseSHA !in baseResults)
