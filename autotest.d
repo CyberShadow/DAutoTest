@@ -222,6 +222,18 @@ void main()
 					}
 				}
 
+				setStatus("pending", "Testing documentation");
+				log("Running tests");
+				{
+					try
+						d.test();
+					catch (Exception e)
+					{
+						redirected.f.writeln("Test failed: ", e.toString());
+						throw new Exception("Test failed");
+					}
+				}
+
 				string changes;
 				if (additions==-1 && deletions==-1)
 					changes = "master build";
