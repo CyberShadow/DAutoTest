@@ -323,18 +323,20 @@ void showResult(string testDir)
 			}
 		}
 
-		html.put(
-			`<tr><td>Changes</td><td>` ~
-			`<table class="changes">`
-		);
-		if (!lines.length)
-			html.put(`(no changes)`);
+		html.put(`<tr><td>Changes</td><td>`);
 		auto changeWidth = min(100.0 / maxChanges, 5.0);
+		bool haveChanges = false;
 		foreach (line; lines)
 		{
 			auto fn = line[2];
 			if (fileIgnored(fn))
 				continue;
+
+			if (!haveChanges)
+			{
+				html.put(`<table class="changes">`);
+				haveChanges = true;
+			}
 			html.put(`<tr><td>`, encodeEntities(fn), `</td><td>`);
 			if (line[0] == "-")
 				html.put(`(binary file)`);
@@ -353,8 +355,12 @@ void showResult(string testDir)
 				`</tr>`
 			);
 		}
+		if (haveChanges)
+			html.put(`</table>`);
+		else
+			html.put(`(no changes)`);
+
 		html.put(
-			`</table>` ~
 			`</td></tr>`
 		);
 	}
