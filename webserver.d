@@ -140,6 +140,7 @@ HttpResponse handleRequest(HttpRequest request, HttpServerConnection conn)
 				return response.serveText(cache.query(["diff", refA, refB, "--", path[3..$].join("/")]));
 			}
 			case "static":
+			case ".well-known":
 				return response.serveFile(pathStr[1..$], "web/");
 			case "robots.txt":
 				return response.serveText("User-agent: *\nDisallow: /");
