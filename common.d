@@ -24,11 +24,15 @@ shared static this()
 
 void log(string s)
 {
+	if (logOverride)
+		return logOverride("dautotest: " ~ s);
 	static Logger instance;
 	if (!instance)
 		instance = createLogger("DAutoTest");
 	instance(s);
 }
+
+void delegate(string) logOverride;
 
 // ***************************************************************************
 

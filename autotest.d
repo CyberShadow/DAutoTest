@@ -79,10 +79,20 @@ void main()
 		Result runBuild(string repo, int n, string sha, string baseSHA)
 		{
 			auto testDir = "results/" ~ baseSHA ~ "/" ~ (repo ? sha : "!base");
-			log("Test directory: " ~ testDir);
+			.log("Test directory: " ~ testDir);
+			testDir.ensureDirExists();
+
+			auto logFileName = testDir ~ "/build.log";
+			auto logFile = File(logFileName, "wb");
+
+			.log("Redirecting log to %s".format(logFileName));
+
+			scope(exit) logOverride = null;
+			logOverride = (string s) { logFile.writeln(s); logFile.flush(); };
+
+			log("Starting build of %s commit %s".format(repo, sha));
 
 			auto resultFile = testDir ~ "/result.txt";
-			resultFile.ensurePathExists();
 
 			string buildID;
 			auto buildIDFile = testDir ~ "/buildid.txt";
@@ -130,10 +140,8 @@ void main()
 
 			string failStatus = "error";
 
-			auto logFile = testDir ~ "/build.log";
 			try
 			{
-				log("Sending output to %s".format(logFile));
 				auto redirected = RedirectOutput(logFile);
 
 				setStatus("pending", "Building documentation");
@@ -154,7 +162,9 @@ void main()
 				{
 					log("Fetching pull...");
 					auto pullSHA = d.getPull(repo, n);
-					enforce(sha == pullSHA, "Pull request SHA mismatch: git is %s, GitHub is %s".format(pullSHA, sha));
+					log("Git    commit SHA1: " ~ pullSHA);
+					log("GitHub commit SHA1: " ~ sha);
+					enforce(sha == pullSHA, "Pull request SHA mismatch");
 
 					log("Merging...");
 					try
@@ -184,7 +194,7 @@ void main()
 					}
 					catch (Exception e)
 					{
-						redirected.f.writeln("Build failed: ", e.toString());
+						logFile.writeln("Build failed: ", e.toString());
 						throw new Exception("Build failed");
 					}
 				}
@@ -229,7 +239,7 @@ void main()
 						d.test();
 					catch (Exception e)
 					{
-						redirected.f.writeln("Test failed: ", e.toString());
+						logFile.writeln("Test failed: ", e.toString());
 						throw new Exception("Test failed");
 					}
 				}
@@ -253,7 +263,7 @@ void main()
 			catch (Exception e)
 			{
 				log("Error: " ~ e.msg);
-				if (logFile.exists && (cast(string)read(logFile)).indexOf("error: unable to read sha1 file of ") >= 0)
+				if (logFileName.exists && (cast(string)read(logFileName)).indexOf("error: unable to read sha1 file of ") >= 0)
 					log("Git corruption detected!");
 				return setStatus(failStatus, e.msg);
 			}
@@ -411,11 +421,10 @@ struct RedirectOutput
 {
 	import std.stdio;
 
-	File f, oldStdout, oldStderr;
+	File oldStdout, oldStderr;
 
-	this(string fn)
+	this(File f)
 	{
-		f = File(fn, "wb");
 		oldStdout = stdout;
 		oldStderr = stderr;
 		stdout = f;
