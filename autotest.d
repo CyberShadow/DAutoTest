@@ -154,7 +154,7 @@ void main()
 				{
 					log("Fetching pull...");
 					auto pullSHA = d.getPull(repo, n);
-					enforce(sha == pullSHA, "Pull request SHA mismatch");
+					enforce(sha == pullSHA, "Pull request SHA mismatch: git is %s, GitHub is %s".format(pullSHA, sha));
 
 					log("Merging...");
 					try
