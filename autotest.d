@@ -82,16 +82,6 @@ void main()
 			.log("Test directory: " ~ testDir);
 			testDir.ensureDirExists();
 
-			auto logFileName = testDir ~ "/build.log";
-			auto logFile = File(logFileName, "wb");
-
-			.log("Redirecting log to %s".format(logFileName));
-
-			scope(exit) logOverride = null;
-			logOverride = (string s) { logFile.writeln(s); logFile.flush(); };
-
-			log("Starting build of %s commit %s".format(repo, sha));
-
 			auto resultFile = testDir ~ "/result.txt";
 
 			string buildID;
@@ -111,10 +101,20 @@ void main()
 				auto lines = resultFile.readText().splitLines();
 				if (lines.length >= 2)
 				{
-					log("Already tested: %s (%s)".format(lines[0], lines[1]));
+					.log("Already tested: %s (%s)".format(lines[0], lines[1]));
 					return Result(true, lines[0], lines[1], testDir, buildID);
 				}
 			}
+
+			auto logFileName = testDir ~ "/build.log";
+			auto logFile = File(logFileName, "wb");
+
+			.log("Redirecting log to %s".format(logFileName));
+
+			scope(exit) logOverride = null;
+			logOverride = (string s) { logFile.writeln(s); logFile.flush(); };
+
+			log("Starting build of %s commit %s".format(repo, sha));
 
 			Result setStatus(string status, string description)
 			{
