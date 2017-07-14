@@ -113,6 +113,8 @@ void main()
 
 			scope(exit) logOverride = null;
 			logOverride = (string s) { logFile.writeln(s); logFile.flush(); };
+			log("----------------------------- Log start -----------------------------");
+			scope(exit) log("----------------------------- Log end -----------------------------");
 
 			log("Starting build of %s commit %s".format(repo, sha));
 
