@@ -107,7 +107,7 @@ void main()
 			}
 
 			auto logFileName = testDir ~ "/build.log";
-			auto logFile = File(logFileName, "wb");
+			auto logFile = File(logFileName, "ab");
 
 			.log("Redirecting log to %s".format(logFileName));
 
