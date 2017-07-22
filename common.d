@@ -25,7 +25,7 @@ shared static this()
 void log(string s)
 {
 	if (logOverride)
-		return logOverride("dautotest: " ~ s);
+		return logOverride(s);
 	static Logger instance;
 	if (!instance)
 		instance = createLogger("DAutoTest");

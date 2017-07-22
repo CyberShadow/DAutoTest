@@ -3,6 +3,7 @@ import core.thread;
 import std.algorithm;
 import std.array;
 import std.conv;
+import std.datetime.systime;
 import std.exception;
 import std.file;
 import std.format;
@@ -20,6 +21,7 @@ import ae.sys.d.manager;
 import ae.sys.file;
 import ae.utils.json;
 import ae.utils.path : nullFileName;
+import ae.utils.time.format;
 
 import common;
 import github;
@@ -112,7 +114,7 @@ void main()
 			.log("Redirecting log to %s".format(logFileName));
 
 			scope(exit) logOverride = null;
-			logOverride = (string s) { logFile.writeln(s); logFile.flush(); };
+			logOverride = (string s) { logFile.writefln("[%s] dautotest: %s", Clock.currTime.formatTime!TIME_FORMAT, s); logFile.flush(); };
 			log("----------------------------- Log start -----------------------------");
 			scope(exit) log("----------------------------- Log end -----------------------------");
 
