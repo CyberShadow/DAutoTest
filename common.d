@@ -10,6 +10,7 @@ struct Config
 	string basePulls;
 	string webRoot = "http://dtest.dlang.io/";
 	string[] ignoredBranches;
+	int timeout = 30 * 60;
 }
 
 immutable Config config;
