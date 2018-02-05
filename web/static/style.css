@@ -33,6 +33,10 @@ table.changes > tbody > tr > td:first-child {
 	padding-right: 1em;
 }
 
+table.changes > tbody > tr > td:nth-child(2) {
+    width: 3em;
+}
+
 .additions {
 	background-color: green;
 }
