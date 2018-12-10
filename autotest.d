@@ -19,6 +19,7 @@ import ae.sys.log;
 import ae.sys.net.ae;
 import ae.sys.d.manager;
 import ae.sys.file;
+import ae.sys.pidfile;
 import ae.utils.json;
 import ae.utils.path : nullFileName;
 import ae.utils.time.format;
@@ -40,6 +41,8 @@ const repos = ["dlang.org", "dmd", "druntime", "phobos", "tools"];
 
 void main()
 {
+	createPidFile();
+
 	if (quiet)
 	{
 		auto logFile = File("autotest.log", "wb");
