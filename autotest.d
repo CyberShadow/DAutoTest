@@ -163,20 +163,20 @@ void main()
 					auto pullSHA = d.getPull("dlang.org", basePull);
 
 					log("Merging...");
-					d.merge(state, "dlang.org", pullSHA);
+					d.merge(state, "dlang.org", pullSHA, DManager.MergeMode.merge);
 				}
 
 				if (repo)
 				{
 					log("Fetching pull...");
 					auto pullSHA = d.getPull(repo, n);
-					log("Git    commit SHA1: " ~ pullSHA);
+					log("Git    commit SHA1: " ~ pullSHA[1] ~ " (base: " ~ pullSHA[0] ~ ")");
 					log("GitHub commit SHA1: " ~ sha);
-					enforce(sha == pullSHA, "Pull request SHA mismatch");
+					enforce(sha == pullSHA[1], "Pull request SHA mismatch");
 
 					log("Merging...");
 					try
-						d.merge(state, repo, pullSHA);
+						d.merge(state, repo, pullSHA, DManager.MergeMode.merge);
 					catch (Exception e)
 					{
 						log("Merge error: " ~ e.msg);
