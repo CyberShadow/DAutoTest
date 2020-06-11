@@ -37,7 +37,7 @@ class DTestManager : DManager
 
 DTestManager d;
 
-const repos = ["dlang.org", "dmd", "druntime", "phobos", "tools"];
+const repos = ["dlang.org", "dmd", "druntime", "phobos", "tools", "dub"];
 
 void main()
 {
