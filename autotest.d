@@ -58,6 +58,7 @@ void main()
 	d.config.local.workDir = "work".absolutePath();
 	d.config.local.cache = "git";
 	d.config.local.timeout = config.timeout;
+	d.config.local.githubToken = config.token;
 	d.config.build.environment = config.env.dup.byPair.assocArray;
 	d.autoClean = true;
 
