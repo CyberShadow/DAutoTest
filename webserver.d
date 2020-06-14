@@ -41,8 +41,23 @@ immutable Config config;
 StringBuffer html;
 Logger log;
 
-Repository cache;
-Repository.ObjectReader objectReader;
+Repository cache()
+{
+	import ae.sys.d.manager : DManager;
+
+	static Repository instance;
+	if (instance is Repository.init)
+		instance = Repository("work/cache-git/v%s/".format(DManager.cacheVersion));
+	return instance;
+}
+
+Repository.ObjectReader objectReader()
+{
+	static Repository.ObjectReader instance;
+	if (instance is Repository.ObjectReader.init)
+		instance = cache.createObjectReader();
+	return instance;
+}
 
 void onRequest(HttpRequest request, HttpServerConnection conn)
 {
@@ -403,11 +418,6 @@ version (Posix)
 void main()
 {
 	log = createLogger("WebServer");
-
-	import ae.sys.d.manager : DManager;
-
-	cache = Repository("work/cache-git/v%s/".format(DManager.cacheVersion));
-	objectReader = cache.createObjectReader();
 
 	auto server = new HttpServer();
 	server.log = log;
