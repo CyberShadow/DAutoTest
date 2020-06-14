@@ -244,7 +244,7 @@ void main()
 				log("Running tests");
 				{
 					try
-						d.test();
+						d.test(false);
 					catch (Exception e)
 					{
 						logFile.writeln("Test failed: ", e.toString());
