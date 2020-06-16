@@ -318,6 +318,7 @@ void showResult(string testDir)
 		`<tr><td>Build log</td><td>`, exists(testDir ~ "build.log") ? `<a href="build.log">View</a>` : "-", `</td></tr>` ~
 		`<tr><td>Files</td><td>` ~
 			`<a href="file/web/index.html"`, tentative, `>Main page</a> &middot; ` ~
+			`<a href="file/web/changelog/pending.html"`, tentative, `>Changelog</a> &middot; ` ~
 			`<a href="file/web/phobos-prerelease/index.html"`, tentative, `>Phobos</a> &middot; ` ~
 			`<a href="file/web/library-prerelease/index.html"`, tentative, `>DDox</a> &middot; ` ~
 			`<a href="file/web/"`, tentative, `>All files</a>` ~
