@@ -59,8 +59,11 @@ void githubQuery(string url, void delegate(string[string], string) handleData, v
 			if (response.status == HttpStatusCode.OK)
 			{
 				log(" > Cache miss");
-				scope(failure) log(response.headers.text);
-				auto headers = response.headers.to!(string[string]);
+				string[string] headers;
+				{
+					scope(failure) log(response.headers.text);
+					headers = response.headers.to!(string[string]);
+				}
 				auto data = (cast(char[])response.getContent().contents).idup;
 				cacheEntry.headers = headers;
 				cacheEntry.data = data;
