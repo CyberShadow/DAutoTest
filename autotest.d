@@ -13,10 +13,9 @@ import std.process;
 import std.stdio : File;
 import std.string;
 
-import ae.net.ssl.openssl;
 import ae.sys.d.cache;
 import ae.sys.log;
-import ae.sys.net.ae;
+import ae.sys.net.curl;
 import ae.sys.d.manager;
 import ae.sys.file;
 import ae.sys.pidfile;
