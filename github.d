@@ -7,11 +7,11 @@ import std.file;
 import std.string;
 import std.utf;
 
-import ae.net.asockets;
-import ae.net.http.client;
 import ae.net.http.common;
 import ae.net.ietf.url;
+import ae.sys.data;
 import ae.sys.file;
+import ae.sys.net;
 import ae.utils.digest;
 import ae.utils.json;
 
@@ -21,6 +21,56 @@ struct CacheEntry
 {
 	string[string] headers;
 	string data;
+}
+
+// Shim for ae.sys.net - TODO refactor away
+void httpRequest(HttpRequest request, void delegate(HttpResponse response, string disconnectReason) resultHandler)
+{
+	HttpResponse response;
+	try
+		response = net.httpRequest(request);
+	catch (Exception e)
+	{
+		resultHandler(null, e.msg);
+		return;
+	}
+	resultHandler(response, null);
+}
+
+// ditto
+void httpRequest(HttpRequest request, void delegate(Data) resultHandler, void delegate(string) errorHandler, int redirectCount = 0)
+{
+	void responseHandler(HttpResponse response, string disconnectReason)
+	{
+		if (!response)
+			if (errorHandler)
+				errorHandler(disconnectReason);
+			else
+				throw new Exception(disconnectReason);
+		else
+		if (response.status >= 300 && response.status < 400 && "Location" in response.headers)
+		{
+			if (redirectCount == 15)
+				throw new Exception("HTTP redirect loop: " ~ request.url);
+			request.resource = applyRelativeURL(request.url, response.headers["Location"]);
+			if (response.status == HttpStatusCode.SeeOther)
+			{
+				request.method = "GET";
+				request.data = null;
+			}
+			httpRequest(request, resultHandler, errorHandler, redirectCount+1);
+		}
+		else
+			if (errorHandler)
+				try
+					resultHandler(response.getContent());
+				catch (Exception e)
+					errorHandler(e.msg);
+			else
+				resultHandler(response.getContent());
+	}
+
+	httpRequest(request, &responseHandler);
 }
 
 void githubQuery(string url, void delegate(string[string], string) handleData, void delegate(string) handleError)
@@ -106,7 +156,7 @@ string githubQuery(string url)
 		}
 	);
 
-	socketManager.loop();
+	// socketManager.loop();
 	return result;
 }
 
@@ -134,7 +184,7 @@ JSONValue[] githubPagedQuery(string url)
 	}
 
 	getPage(url);
-	socketManager.loop();
+	// socketManager.loop();
 	return result;
 }
 
@@ -198,6 +248,6 @@ string githubPost(string url, string jsonData)
 			throw new Exception(error);
 		});
 
-	socketManager.loop();
+	// socketManager.loop();
 	return result;
 }
