@@ -9,6 +9,7 @@ import std.utf;
 
 import ae.net.http.common;
 import ae.net.ietf.url;
+import ae.net.ietf.headers;
 import ae.sys.data;
 import ae.sys.file;
 import ae.sys.net;
@@ -73,7 +74,7 @@ void httpRequest(HttpRequest request, void delegate(Data) resultHandler, void de
 	httpRequest(request, &responseHandler);
 }
 
-void githubQuery(string url, void delegate(string[string], string) handleData, void delegate(string) handleError)
+void githubQuery(string url, void delegate(Headers, string) handleData, void delegate(string) handleError)
 {
 	auto request = new HttpRequest;
 	request.resource = url;
@@ -103,23 +104,21 @@ void githubQuery(string url, void delegate(string[string], string) handleData, v
 			if (response.status == HttpStatusCode.NotModified)
 			{
 				log(" > Cache hit");
-				handleData(cacheEntry.headers, cacheEntry.data);
+				handleData(Headers(cacheEntry.headers), cacheEntry.data);
 			}
 			else
 			if (response.status == HttpStatusCode.OK)
 			{
 				log(" > Cache miss");
-				string[string] headers;
 				{
 					scope(failure) log(response.headers.text);
-					headers = response.headers.to!(string[string]);
+					cacheEntry.headers = response.headers.to!(string[string]);
 				}
 				auto data = (cast(char[])response.getContent().contents).idup;
-				cacheEntry.headers = headers;
 				cacheEntry.data = data;
 				ensurePathExists(cacheFileName);
 				write(cacheFileName, toJson(cacheEntry));
-				handleData(headers, data);
+				handleData(response.headers, data);
 			}
 			else
 			if (response.status >= 300 && response.status < 400 && "Location" in response.headers)
@@ -146,7 +145,7 @@ string githubQuery(string url)
 	string result;
 
 	githubQuery(url,
-		(string[string] headers, string dataReceived)
+		(Headers headers, string dataReceived)
 		{
 			result = dataReceived;
 		},
@@ -169,7 +168,7 @@ JSONValue[] githubPagedQuery(string url)
 	void getPage(string url)
 	{
 		githubQuery(url,
-			(string[string] headers, string data)
+			(Headers headers, string data)
 			{
 				result ~= data.parseJSON().array;
 				auto links = parseLinks(headers.get("Link", null));
