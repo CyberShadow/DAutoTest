@@ -1,0 +1,21 @@
+#!/bin/bash
+set -eEuo pipefail
+
+cd "$(dirname "$0")"/..
+
+user=$(id -un)
+tmp=/dev/shm/$user/work
+mkdir -p "$tmp"
+chmod 700 "$tmp"
+
+site=$PWD/site
+mkdir -p "$site"
+
+site_dirs=(cache-git dl)
+for dir in "${site_dirs[@]}"
+do
+    mkdir -p "$site/$dir"
+    test -e "$tmp/$dir" || ln -s "$site/$dir" "$tmp/$dir"
+done
+
+test -h work || ln -s "$tmp" work

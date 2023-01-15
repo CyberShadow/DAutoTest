@@ -1,0 +1,11 @@
+[Unit]
+Description=DAutoTest webserver
+
+[Service]
+WorkingDirectory=%h/DAutoTest
+ExecStart=%h/DAutoTest/webserver
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=default.target

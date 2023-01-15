@@ -1,0 +1,12 @@
+[Unit]
+Description=DAutoTest
+
+[Service]
+WorkingDirectory=%h/DAutoTest
+ExecStartPre=%h/DAutoTest/scripts/autotest.pre
+ExecStart=%h/DAutoTest/autotest
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=default.target
