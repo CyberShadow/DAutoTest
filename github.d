@@ -232,7 +232,7 @@ string githubPost(string url, string jsonData)
 	request.method = "POST";
 	request.headers["Authorization"] = "token " ~ config.token;
 	request.headers["Content-Type"] = "application/json";
-	request.data = [Data(jsonData)];
+	request.data = DataVec(Data(jsonData));
 
 	string result;
 
