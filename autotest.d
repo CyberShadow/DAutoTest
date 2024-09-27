@@ -207,7 +207,7 @@ void main()
 					}
 				}
 
-				int additions=-1, deletions=-1;
+				int additions=-1, deletions=-1, changedFiles=-1;
 
 				if (buildID && baseResult && baseResult.buildID)
 				{
@@ -227,12 +227,13 @@ void main()
 						).wait();
 						if (r == 0)
 						{
-							additions = deletions = 0;
+							additions = deletions = 0, changedFiles = 0;
 							foreach (line; diffFile.readText().splitLines().map!(line => line.split("\t")))
 								if (line[0] != "-" && !fileIgnored(line[2]))
 								{
 									additions += line[0].to!int;
 									deletions += line[1].to!int;
+									changedFiles++;
 								}
 						}
 						else
@@ -261,12 +262,14 @@ void main()
 				else
 					changes =
 					(
+						(changedFiles ? ["%d file%s: ".format(changedFiles, changedFiles==1 ? "" : "s")] : [])
+						~
 						(additions ? ["%d addition%s".format(additions, additions==1 ? "" : "s")] : [])
 						~
 						(deletions ? ["%d deletion%s".format(deletions, deletions==1 ? "" : "s")] : [])
 					).join(", ");
 
-				return setStatus("success", "Documentation OK (%s)".format(changes));
+				return setStatus("success", "OK (%s)".format(changes));
 			}
 			catch (Exception e)
 			{
