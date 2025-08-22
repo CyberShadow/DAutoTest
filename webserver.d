@@ -315,7 +315,6 @@ void showResult(string testDir)
 		`<tr><td>Status</td><td>`, result.get(0, "?"), `</td></tr>` ~
 		`<tr><td>Details</td><td>`, result.get(1, "?"), `</td></tr>` ~
 	//	`<tr><td>Build log</td><td><pre>`, tryReadText(testDir ~ "build.log").encodeEntities(), `</pre></td></tr>`
-		`<tr><td>Build log</td><td>`, exists(testDir ~ "build.log") ? `<a href="build.log">View</a>` : "-", `</td></tr>` ~
 		`<tr><td>Files</td><td>` ~
 			`<a href="file/web/index.html"`, tentative, `>Main page</a> &middot; ` ~
 			`<a href="file/web/phobos-prerelease/index.html"`, tentative, `>Phobos</a> &middot; ` ~
@@ -381,8 +380,26 @@ void showResult(string testDir)
 		);
 	}
 	html.put(
+		`<tr></tr>` ~
+		`<tr><td>Build log</td><td>`, exists(testDir ~ "build.log") ? `<a href="build.log">View</a>` : "-", `</td></tr>` ~
 		`</table>`
 	);
+	if (exists(testDir ~ "build.log"))
+	{
+		html.put(
+			`<h2>Build log</h2>` ~
+			`<iframe src="build.log" id="buildlog" width="100%" height="400px"></iframe>` ~
+			// scroll to bottom
+			`<script>` ~
+			`  (function(){` ~
+			`    var i = document.getElementById('buildlog');` ~
+			`    i.addEventListener('load', function(){` ~
+			`      i.contentWindow.scrollTo(0, i.contentWindow.document.body.scrollHeight);` ~
+			`    });` ~
+			`  })();` ~
+			`</script>`
+		);
+	}
 }
 
 string ansiToHtml(string ansi)
